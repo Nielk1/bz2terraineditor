@@ -42,6 +42,19 @@ namespace BZ2TerrainEditor
         private readonly List<GCHandle> imageHandles;
         private readonly List<Form> forms;
 
+        private string lastHeightMap;
+        private string lastColorMap;
+        private string lastMapImport;
+        private string lastCellCliff;
+        private string lastCellWater;
+        private string lastCellBuilding;
+        private string lastCellLava;
+        private string lastCellSloped;
+        private string lastAlpha1;
+        private string lastAlpha2;
+        private string lastAlpha3;
+        private string[] lastTileMap = new string[4];
+
         #endregion
 
         #region Properties
@@ -616,20 +629,24 @@ namespace BZ2TerrainEditor
             return rescaled;
         }
 
-        private Bitmap loadBitmap()
+        private Bitmap loadBitmap(ref string filename)
         {
-            return this.loadBitmap(this.terrain.Width, this.terrain.Height);
+            return this.loadBitmap(ref filename, this.terrain.Width, this.terrain.Height);
         }
 
-        private Bitmap loadBitmap(int width, int height)
+        private Bitmap loadBitmap(ref string filename, int width, int height)
         {
             try
             {
                 OpenFileDialog dialog = new OpenFileDialog();
-                dialog.InitialDirectory = Properties.Settings.Default.OpenFileInitialDirectory;
-                dialog.Filter = bitmapFileFilter;
-                if (dialog.ShowDialog() != DialogResult.OK)
-                    return null;
+                dialog.FileName = filename;
+                if (Control.ModifierKeys != Keys.Shift || !File.Exists(dialog.FileName))
+                {
+                    dialog.InitialDirectory = Properties.Settings.Default.OpenFileInitialDirectory;
+                    dialog.Filter = bitmapFileFilter;
+                    if (dialog.ShowDialog() != DialogResult.OK)
+                        return null;
+                }
 
                 Bitmap bitmap = new Bitmap(dialog.FileName);
                 if (bitmap.Width == width && bitmap.Height == height)
@@ -638,7 +655,9 @@ namespace BZ2TerrainEditor
                 if (MessageBox.Show("The selected bitmap has a different size than the terrain and has to be rescaled.", "Import", MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return null;
 
-                return resizeBitmap(bitmap, width, height);
+                var retVal = resizeBitmap(bitmap, width, height);
+                filename = dialog.FileName;
+                return retVal;
             }
             catch (Exception ex)
             {
@@ -815,18 +834,22 @@ namespace BZ2TerrainEditor
 
         private void heightMapImport_Click(object sender, EventArgs e)
         {
-            if(this.terrain == null)
+            if (this.terrain == null)
                 return;
-
 
             try
             {
                 OpenFileDialog dialog = new OpenFileDialog();
-                dialog.InitialDirectory = Properties.Settings.Default.OpenFileInitialDirectory;
-                dialog.Filter = heightMapFileFilter;
-                if (dialog.ShowDialog() != DialogResult.OK)
-                    return;
-
+                dialog.FileName = lastHeightMap;
+                if (Control.ModifierKeys != Keys.Shift || !File.Exists(dialog.FileName))
+                {
+                    // not holding just shift
+                    dialog.InitialDirectory = Properties.Settings.Default.OpenFileInitialDirectory;
+                    dialog.Filter = heightMapFileFilter;
+                    if (dialog.ShowDialog() != DialogResult.OK)
+                        return;
+                    lastHeightMap = dialog.FileName;
+                }
                 if (dialog.FilterIndex <= 2)
                 {
                     Bitmap bitmap = new Bitmap(dialog.FileName);
@@ -859,6 +882,7 @@ namespace BZ2TerrainEditor
                             for (int x = 0; x < data.Width; x++)
                                 terrain.HeightMapFloat[x, y] = ((float)buffer[y * data.Stride + x * 3] * (float)(rangeDialog.Maximum - rangeDialog.Minimum) / 255.0f + (float)rangeDialog.Minimum); // * 0.1f;
                     }
+
                 }
                 else if (dialog.FilterIndex == 3)
                 {
@@ -1326,7 +1350,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastColorMap);
             if (bitmap == null)
                 return;
 
@@ -1379,7 +1403,7 @@ namespace BZ2TerrainEditor
             if (terrain.Version >= 4)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastMapImport);
             if (bitmap == null)
                 return;
 
@@ -1434,7 +1458,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastCellCliff);
             if (bitmap == null)
                 return;
 
@@ -1464,7 +1488,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastCellWater);
             if (bitmap == null)
                 return;
 
@@ -1494,7 +1518,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastCellBuilding);
             if (bitmap == null)
                 return;
 
@@ -1524,7 +1548,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastCellLava);
             if (bitmap == null)
                 return;
 
@@ -1554,7 +1578,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastCellSloped);
             if (bitmap == null)
                 return;
 
@@ -1598,7 +1622,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastAlpha1);
             if (bitmap == null)
                 return;
 
@@ -1642,7 +1666,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastAlpha2);
             if (bitmap == null)
                 return;
 
@@ -1686,7 +1710,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap();
+            Bitmap bitmap = this.loadBitmap(ref lastAlpha3);
             if (bitmap == null)
                 return;
 
@@ -1720,7 +1744,7 @@ namespace BZ2TerrainEditor
             if (this.terrain == null)
                 return;
 
-            Bitmap bitmap = this.loadBitmap(this.terrain.InfoMap.GetUpperBound(0) + 1, this.terrain.InfoMap.GetUpperBound(1) + 1);
+            Bitmap bitmap = this.loadBitmap(ref lastTileMap[layer], this.terrain.InfoMap.GetUpperBound(0) + 1, this.terrain.InfoMap.GetUpperBound(1) + 1);
             if (bitmap == null)
                 return;
 
