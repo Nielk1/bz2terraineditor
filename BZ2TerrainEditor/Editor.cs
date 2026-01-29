@@ -648,6 +648,8 @@ namespace BZ2TerrainEditor
                         return null;
                 }
 
+                filename = dialog.FileName;
+
                 Bitmap bitmap = new Bitmap(dialog.FileName);
                 if (bitmap.Width == width && bitmap.Height == height)
                     return bitmap;
@@ -655,9 +657,7 @@ namespace BZ2TerrainEditor
                 if (MessageBox.Show("The selected bitmap has a different size than the terrain and has to be rescaled.", "Import", MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return null;
 
-                var retVal = resizeBitmap(bitmap, width, height);
-                filename = dialog.FileName;
-                return retVal;
+                return resizeBitmap(bitmap, width, height);
             }
             catch (Exception ex)
             {
@@ -848,8 +848,10 @@ namespace BZ2TerrainEditor
                     dialog.Filter = heightMapFileFilter;
                     if (dialog.ShowDialog() != DialogResult.OK)
                         return;
-                    lastHeightMap = dialog.FileName;
                 }
+
+                lastHeightMap = dialog.FileName;
+
                 if (dialog.FilterIndex <= 2)
                 {
                     Bitmap bitmap = new Bitmap(dialog.FileName);
