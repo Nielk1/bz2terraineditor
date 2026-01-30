@@ -43,6 +43,7 @@ namespace BZ2TerrainEditor
         private readonly List<Form> forms;
 
         private string lastHeightMap;
+        private int lastHeightFilterIndex;
         private string lastColorMap;
         private string lastMapImport;
         private string lastCellCliff;
@@ -846,13 +847,15 @@ namespace BZ2TerrainEditor
                     // not holding just shift
                     dialog.InitialDirectory = Properties.Settings.Default.OpenFileInitialDirectory;
                     dialog.Filter = heightMapFileFilter;
+                    dialog.FilterIndex = lastHeightFilterIndex;
                     if (dialog.ShowDialog() != DialogResult.OK)
                         return;
+                    lastHeightFilterIndex = dialog.FilterIndex;
                 }
 
                 lastHeightMap = dialog.FileName;
 
-                if (dialog.FilterIndex <= 2)
+                if (lastHeightFilterIndex <= 2)
                 {
                     Bitmap bitmap = new Bitmap(dialog.FileName);
                     if (bitmap.Width != this.terrain.Width || bitmap.Height != terrain.Height)
@@ -884,16 +887,15 @@ namespace BZ2TerrainEditor
                             for (int x = 0; x < data.Width; x++)
                                 terrain.HeightMapFloat[x, y] = ((float)buffer[y * data.Stride + x * 3] * (float)(rangeDialog.Maximum - rangeDialog.Minimum) / 255.0f + (float)rangeDialog.Minimum); // * 0.1f;
                     }
-
                 }
-                else if (dialog.FilterIndex == 3)
+                else if (lastHeightFilterIndex == 3)
                 {
                     using (FileStream stream = new FileStream(dialog.FileName, FileMode.Open, FileAccess.Read))
                     {
                         NetPBM.ReadHeightmap(stream, this.terrain);
                     }
                 }
-                else if (dialog.FilterIndex == 4)
+                else if (lastHeightFilterIndex == 4)
                 {
                     using (FileStream stream = new FileStream(dialog.FileName, FileMode.Open, FileAccess.Read))
                     {
@@ -917,7 +919,7 @@ namespace BZ2TerrainEditor
                         }
                     }
                 }
-                else if (dialog.FilterIndex == 5)
+                else if (lastHeightFilterIndex == 5)
                 {
                     using (FileStream stream = new FileStream(dialog.FileName, FileMode.Open, FileAccess.Read))
                     {
@@ -944,8 +946,8 @@ namespace BZ2TerrainEditor
                         }
                     }
                 }
-                else if (dialog.FilterIndex == 6) { throw new NotImplementedException(); }
-                else if (dialog.FilterIndex == 7)
+                else if (lastHeightFilterIndex == 6) { throw new NotImplementedException(); }
+                else if (lastHeightFilterIndex == 7)
                 {
                     using (Tiff input = Tiff.Open(dialog.FileName, "r"))
                     {
@@ -994,7 +996,7 @@ namespace BZ2TerrainEditor
                         input.Close();
                     }
                 }
-                else if (dialog.FilterIndex == 8)
+                else if (lastHeightFilterIndex == 8)
                 {
                     using (FileStream stream = new FileStream(dialog.FileName, FileMode.Open, FileAccess.Read))
                     using (StreamReader reader = new StreamReader(stream))
