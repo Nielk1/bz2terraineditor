@@ -24,8 +24,9 @@ namespace BZ2TerrainEditor
 		{
 			this.InitializeComponent();
 			this.image = image;
-			this.filter = InterpolationMode.Bilinear;
-			this.contextMenuFilterBilinear.Checked = true;
+			//this.filter = InterpolationMode.Bilinear;
+			this.filter = InterpolationMode.NearestNeighbor;
+            this.contextMenuFilterBilinear.Checked = true;
 
 			this.ClientSize = image.Size;
 			while (this.ClientSize.Width > 512 || this.ClientSize.Height > 512)
@@ -51,6 +52,8 @@ namespace BZ2TerrainEditor
 			base.OnPaint(e);
 			e.Graphics.Clear(this.BackColor);
 			e.Graphics.InterpolationMode = this.filter;
+			if (e.Graphics.InterpolationMode == InterpolationMode.NearestNeighbor)
+				e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
 
 			float factor = Math.Min((float)this.ClientSize.Width / (float)this.image.Width, (float)this.ClientSize.Height / (float)this.image.Height);
 			int width = (int)(this.image.Width * factor);
@@ -82,14 +85,12 @@ namespace BZ2TerrainEditor
 			this.contextMenuFilterNearest.Checked = this.contextMenuFilterBilinear.Checked = false;
 			this.contextMenuFilterBicubic.Checked = true;
 		}
-
 	
 		private void contextMenuClose_Click(object sender, EventArgs e)
 		{
 			this.Close();
 		}
-		
-		#endregion
 
-	}
+        #endregion
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using BitMiracle.LibTiff.Classic;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,7 +10,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ProgressBar;
 
 namespace BZ2TerrainEditor
 {
@@ -165,6 +168,7 @@ namespace BZ2TerrainEditor
             this.tileMap1Preview.Image = this.generateTileMapImage(this.terrain.InfoMap, 1);
             this.tileMap2Preview.Image = this.generateTileMapImage(this.terrain.InfoMap, 2);
             this.tileMap3Preview.Image = this.generateTileMapImage(this.terrain.InfoMap, 3);
+            RegenerateDerivativeData();
             if (this.terrain.Version < 4)
             {
                 this.heightMapMinMaxLabel.Text = string.Format(CultureInfo.InvariantCulture, "min: {0}, max: {1}", this.terrain.HeightMapMin, this.terrain.HeightMapMax);
@@ -186,6 +190,15 @@ namespace BZ2TerrainEditor
             }
 
             this.flowLayout.Enabled = true;
+        }
+
+        private void RegenerateDerivativeData()
+        {
+            this.tileAverageHeightPreview.Image = this.generate16BitImage(this.terrain.TileAverageHeight, this.terrain.HeightMapFloatMin, this.terrain.HeightMapFloatMax);
+            this.tileFlatnessPreview.Image = this.generate16BitImage(this.terrain.TileFlatness, this.terrain.TileFlatnessMapMin, this.terrain.TileFlatnessMapMax);
+            var images = this.generateFlatZonesImage();
+            this.tileFlatZones.Image = images.Item1;
+            this.tileFlatZoneIDs.Image = images.Item2;
         }
 
         //
@@ -324,6 +337,404 @@ namespace BZ2TerrainEditor
             foreach (GCHandle handle in this.imageHandles)
                 handle.Free();
             this.imageHandles.Clear();
+        }
+
+        public static List<Color> GenerateUniqueColors(int count)
+        {
+            var colors = new List<Color>(count);
+            for (int i = 0; i < count; i++)
+            {
+                // Evenly distribute hues around the color wheel
+                float hue = (360f * i) / count;
+                colors.Add(FromHSV(hue, 0.7f, 0.95f));
+            }
+            return colors;
+        }
+
+        // Helper: HSV to RGB
+        public static Color FromHSV(float hue, float saturation, float value)
+        {
+            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
+            double f = hue / 60 - Math.Floor(hue / 60);
+
+            value = value * 255;
+            int v = Convert.ToInt32(value);
+            int p = Convert.ToInt32(value * (1 - saturation));
+            int q = Convert.ToInt32(value * (1 - f * saturation));
+            int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
+
+            switch (hi)
+            {
+                case 0: return Color.FromArgb(255, v, t, p);
+                case 1: return Color.FromArgb(255, q, v, p);
+                case 2: return Color.FromArgb(255, p, v, t);
+                case 3: return Color.FromArgb(255, p, q, v);
+                case 4: return Color.FromArgb(255, t, p, v);
+                default: return Color.FromArgb(255, v, p, q);
+            }
+        }
+
+        // TODO this function does way too much, like holy shit it generates the flattening data we use, wtf are we thinking?!
+        private (Bitmap, Bitmap) generateFlatZonesImage()
+        {
+            if (terrain == null)
+                return (null, null); // TODO double check this is correct, will probably crash
+
+
+            float maxRange = 0.01f;
+            float MergeTolerance = 0.01f;
+
+
+            int width = terrain.Width / terrain.CLUSTER_SIZE;
+            int height = terrain.Height / terrain.CLUSTER_SIZE;
+            byte[] buffer = new byte[width * height * 3];
+            byte[] buffer2 = new byte[width * height * 3];
+
+            float tileFlatnessMapMin = float.MaxValue;
+            float tileFlatnessMapMax = float.MinValue;
+
+            bool haveMidFlat = false;
+            Queue<(int x, int y)> queue = new Queue<(int x, int y)>();
+            for (int y = height - 1; y >= 0; y--)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float flatness = terrain.TileFlatness[x, y];
+                    if (flatness == 0)
+                    {
+                        queue.Enqueue((x, y));
+                    }
+                    else if (flatness <= maxRange)
+                    {
+                        if (flatness < tileFlatnessMapMin) tileFlatnessMapMin = flatness;
+                        if (flatness > tileFlatnessMapMax) tileFlatnessMapMax = flatness;
+                        haveMidFlat = true;
+                    }
+                }
+            }
+
+            //int countRegions = 0;
+            int[,] regionMap = new int[width, height]; // 0 = unassigned, >0 = region ID
+            Dictionary<int, float> regionHeights = new Dictionary<int, float>();
+            Dictionary<int, int> regionSizes = new Dictionary<int, int>();
+            Dictionary<int, int> regionParent = new Dictionary<int, int>(); // compression
+
+            if (haveMidFlat)
+            {
+                IEnumerable neighbors(int nx, int ny)
+                {
+                    for (int x = nx - 1; x <= nx + 1; x++)
+                        for (int y = ny - 1; y <= ny + 1; y++)
+                            if ((x != nx || y != ny) && x >= 0 && x < width && y >= 0 && y < height)
+                                yield return (x, y);
+                }
+                int FindRegion(int region)
+                {
+                    while (regionParent.ContainsKey(region))
+                        region = regionParent[region];
+                    return region;
+                }
+
+                int nextRegionId = 1;
+
+                // 1. Seed identification
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        if (terrain.TileFlatness[x, y] == 0)
+                        {
+                            //countRegions = nextRegionId;
+                            regionSizes[nextRegionId] = 1;
+                            regionHeights[nextRegionId] = terrain.TileAverageHeight[x, y];
+                            regionMap[x, y] = nextRegionId;
+                            nextRegionId++;
+                        }
+                    }
+                }
+                //for (int y = 0; y < height; y++)
+                //{
+                //    for (int x = 0; x < width; x++)
+                //    {
+                //        if (terrain.TileFlatness[x, y] == 0 && regionMap[x, y] == 0)
+                //        {
+                //            float seedHeight = terrain.TileAverageHeight[x, y];
+                //            regionMap[x, y] = nextRegionId;
+                //            regionHeights[nextRegionId] = seedHeight;
+                //            regionSizes[nextRegionId] = 1;
+                //
+                //            // Flood fill
+                //            Queue<(int, int)> q = new Queue<(int, int)>();
+                //            q.Enqueue((x, y));
+                //            while (q.Count > 0)
+                //            {
+                //                var (cx, cy) = q.Dequeue();
+                //                foreach ((int x, int y) neighbor in neighbors(x, y))
+                //                {
+                //                    if (terrain.TileFlatness[neighbor.x, neighbor.y] == 0 &&
+                //                        regionMap[neighbor.x, neighbor.y] == 0 &&
+                //                        Math.Abs(terrain.TileAverageHeight[neighbor.x, neighbor.y] - seedHeight) <= MergeTolerance)
+                //                    {
+                //                        regionMap[neighbor.x, neighbor.y] = nextRegionId;
+                //                        regionSizes[nextRegionId]++;
+                //                        q.Enqueue((neighbor.x, neighbor.y));
+                //                    }
+                //                }
+                //            }
+                //            nextRegionId++;
+                //        }
+                //    }
+                //}
+
+                // After assigning region IDs to all seed cells
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        if (terrain.TileFlatness[x, y] == 0)
+                        {
+                            int regionId = FindRegion(regionMap[x, y]);
+                            regionMap[x, y] = regionId; // Path compression
+                            float regionHeight = regionHeights[regionId];
+
+                            foreach ((int x, int y) neighbor in neighbors(x, y))
+                            {
+                                regionId = FindRegion(regionMap[x, y]);
+                                regionMap[x, y] = regionId; // Path compression
+                                if (terrain.TileFlatness[neighbor.x, neighbor.y] == 0)
+                                {
+                                    int neighborRegion = FindRegion(regionMap[neighbor.x, neighbor.y]);
+                                    regionMap[neighbor.x, neighbor.y] = neighborRegion; // Path compression
+                                    float neighborHeight = regionHeights[neighborRegion];
+                                    if (regionId != neighborRegion && Math.Abs(regionHeight - neighborHeight) <= MergeTolerance)
+                                    {
+                                        // Merge neighborRegion into regionId (or vice versa, using union-find)
+                                        int largerRegion = regionSizes[regionId] >= regionSizes[neighborRegion] ? regionId : neighborRegion;
+                                        int smallerRegion = regionSizes[regionId] < regionSizes[neighborRegion] ? regionId : neighborRegion;
+                                        float flattenHeight = regionHeights[largerRegion];
+
+                                        // Update all cells in the smaller region to the larger region's ID and height
+                                        for (int y2 = 0; y2 < height; y2++)
+                                        {
+                                            for (int x2 = 0; x2 < width; x2++)
+                                            {
+                                                if (regionMap[x2, y2] == smallerRegion)
+                                                {
+                                                    regionMap[x2, y2] = largerRegion;
+                                                    regionHeights[largerRegion] = flattenHeight;
+                                                    regionParent[smallerRegion] = largerRegion;
+                                                }
+                                            }
+                                        }
+                                        regionSizes[largerRegion] += regionSizes[smallerRegion];
+                                        regionSizes.Remove(smallerRegion);
+                                        regionHeights.Remove(smallerRegion);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                while (queue.Count > 0)
+                {
+                    var (x, y) = queue.Dequeue();
+                    //int regionId = regionMap[x, y];
+                    int regionId = FindRegion(regionMap[x, y]);
+                    regionMap[x, y] = regionId; // Path compression
+                    if (regionId == -1)
+                        continue;
+                    float regionHeight = regionHeights[regionId];
+
+                    foreach ((int x, int y) neighbor in neighbors(x, y))
+                    {
+                        // recheck region compression
+                        regionId = FindRegion(regionMap[x, y]);
+                        regionMap[x, y] = regionId; // Path compression
+
+                        if (terrain.TileFlatness[neighbor.x, neighbor.y] <= maxRange)
+                        {
+                            if (regionMap[neighbor.x, neighbor.y] == 0)
+                            {
+                                // Not assigned yet, assign and enqueue
+                                regionSizes[regionId]++;
+                                regionMap[neighbor.x, neighbor.y] = regionId;
+                                queue.Enqueue((neighbor.x, neighbor.y));
+                            }
+                            else if (regionMap[neighbor.x, neighbor.y] != regionId)
+                            {
+                                // Competing region, check heights
+                                //int regionIndex = regionMap[neighbor.x, neighbor.y];
+                                int regionIndex = FindRegion(regionMap[neighbor.x, neighbor.y]);
+                                if (regionIndex == -1)
+                                    continue;
+                                regionMap[neighbor.x, neighbor.y] = regionIndex; // Path compression
+                                float heightA = regionHeights[regionId];
+                                float heightB = regionHeights[regionIndex];
+                                if (regionIndex >= 0)// && heightA != heightB)
+                                {
+                                    float diff = Math.Abs(heightA - heightB);
+                                    if (diff <= MergeTolerance)
+                                    {
+                                        // Merge: flatten all cells in both regions to the height of the larger region
+                                        int largerRegion = regionSizes[regionId] >= regionSizes[regionIndex] ? regionId : regionIndex;
+                                        int smallerRegion = regionSizes[regionId] < regionSizes[regionIndex] ? regionId : regionIndex;
+                                        float flattenHeight = regionHeights[largerRegion];
+
+                                        // Update all cells in the smaller region to the larger region's ID and height
+                                        for (int y2 = 0; y2 < height; y2++)
+                                        {
+                                            for (int x2 = 0; x2 < width; x2++)
+                                            {
+                                                if (regionMap[x2, y2] == smallerRegion)
+                                                {
+                                                    regionMap[x2, y2] = largerRegion;
+                                                    regionHeights[largerRegion] = flattenHeight;
+                                                    queue.Enqueue((x2, y2)); // re-check to allow merging
+                                                }
+                                            }
+                                        }
+                                        // Update region size
+                                        regionParent[smallerRegion] = largerRegion;
+                                        regionSizes[largerRegion] += regionSizes[smallerRegion];
+                                        regionSizes.Remove(smallerRegion);
+                                        regionHeights.Remove(smallerRegion);
+                                    }
+                                    else
+                                    {
+                                        // Mark as conflict, do not flatten
+                                        regionMap[neighbor.x, neighbor.y] = -1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                queue.Clear(); // save ram
+            }
+
+            int[] RegionKeys = regionSizes.Keys.ToArray();
+            var RegionColors = GenerateUniqueColors(RegionKeys.Length);
+
+            int i = 0;
+            int j = 0;
+            for (int y = height - 1; y >= 0; y--)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float avgHeight = terrain.TileAverageHeight[x, y];
+                    float rangeHeight = terrain.TileFlatness[x, y];
+                    byte h = (byte)((float)(avgHeight - terrain.HeightMapFloatMin) / (float)(terrain.HeightMapFloatMax - terrain.HeightMapFloatMin) * 255.0f);
+                    if (rangeHeight <= maxRange)
+                    {
+                        //buffer2[j++] = 0;
+                        //buffer2[j++] = Array.IndexOf(RegionKeys, FindRegion(regionMap[x, y]));
+                        //buffer2[j++] = (byte)((Array.IndexOf(RegionKeys, regionMap[x, y]) + 1) * 255f / (RegionKeys.Length + 1));
+                        //buffer2[j++] = 0;
+                        int region = regionMap[x, y];
+                        int regionIdx = Array.IndexOf(RegionKeys, region);
+                        float newHeight = regionIdx < 0 ? avgHeight : regionHeights[region];
+                        if (regionIdx < 0)
+                        {
+                            byte color = (byte)((float)(rangeHeight - terrain.TileFlatnessMapMin) / (float)(terrain.TileFlatnessMapMax - terrain.TileFlatnessMapMin) * 255.0f);
+                            buffer2[j++] = color;
+                            buffer2[j++] = color;
+                            buffer2[j++] = color;
+                        }
+                        else
+                        {
+                            var col = RegionColors[regionIdx];
+                            if (rangeHeight == 0f)
+                            {
+                                if (newHeight != avgHeight)
+                                {
+                                    buffer2[j++] = (byte)(col.B * 0.5f);
+                                    buffer2[j++] = (byte)(col.G * 0.5f);
+                                    buffer2[j++] = (byte)(col.R * 0.5f);
+                                }
+                                else
+                                {
+                                    buffer2[j++] = col.B;
+                                    buffer2[j++] = col.G;
+                                    buffer2[j++] = col.R;
+                                }
+                            }
+                            else
+                            {
+                                buffer2[j++] = (byte)(col.B * 0.75f);
+                                buffer2[j++] = (byte)(col.G * 0.75f);
+                                buffer2[j++] = (byte)(col.R * 0.75f);
+                            }
+                        }
+
+                        if (rangeHeight == 0f)
+                        {
+                            if (newHeight != avgHeight)
+                            {
+                                // already flat but different height, yellow
+                                buffer[i++] = 0;
+                                buffer[i++] = 255;
+                                buffer[i++] = 255;
+                            }
+                            else
+                            {
+                                // flat, green
+                                buffer[i++] = 0;
+                                buffer[i++] = 255;
+                                buffer[i++] = 0;
+                            }
+                        }
+                        else if (rangeHeight <= maxRange)
+                        {
+                            if (region < 0)
+                            {
+                                // can't flatten, red
+                                buffer[i++] = 0;
+                                buffer[i++] = 0;
+                                buffer[i++] = 255;
+                            }
+                            if (region > 0)
+                            {
+                                // will flatten, dark green
+                                //byte color = (byte)(255 - 64 - ((rangeHeight - tileFlatnessMapMin) / (tileFlatnessMapMax - tileFlatnessMapMin) * 127f));
+                                buffer[i++] = 0;
+                                buffer[i++] = 127;
+                                buffer[i++] = 0;
+                            }
+                            if (region == 0)
+                            {
+                                // ignore, blue
+                                buffer[i++] = 255;
+                                buffer[i++] = 0;
+                                buffer[i++] = 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // greyscale
+                        byte color = (byte)((float)(rangeHeight - terrain.TileFlatnessMapMin) / (float)(terrain.TileFlatnessMapMax - terrain.TileFlatnessMapMin) * 255.0f);
+                        buffer[i++] = color;
+                        buffer[i++] = color;
+                        buffer[i++] = color;
+
+                        buffer2[j++] = color;
+                        buffer2[j++] = color;
+                        buffer2[j++] = color;
+                    }
+                }
+            }
+
+            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            GCHandle handle2 = GCHandle.Alloc(buffer2, GCHandleType.Pinned);
+            Bitmap bmp = new Bitmap(width, height, width * 3, PixelFormat.Format24bppRgb, handle.AddrOfPinnedObject());
+            Bitmap bmp2 = new Bitmap(width, height, width * 3, PixelFormat.Format24bppRgb, handle2.AddrOfPinnedObject());
+            this.imageHandles.Add(handle);
+            this.imageHandles.Add(handle2);
+            return (bmp, bmp2);
         }
 
         private Bitmap generateNormalImage(byte[,] map)
@@ -887,6 +1298,7 @@ namespace BZ2TerrainEditor
                             for (int x = 0; x < data.Width; x++)
                                 terrain.HeightMapFloat[x, y] = ((float)buffer[y * data.Stride + x * 3] * (float)(rangeDialog.Maximum - rangeDialog.Minimum) / 255.0f + (float)rangeDialog.Minimum); // * 0.1f;
                     }
+                    RegenerateDerivativeData();
                 }
                 else if (lastHeightFilterIndex == 3)
                 {
@@ -894,6 +1306,7 @@ namespace BZ2TerrainEditor
                     {
                         NetPBM.ReadHeightmap(stream, this.terrain);
                     }
+                    RegenerateDerivativeData();
                 }
                 else if (lastHeightFilterIndex == 4)
                 {
@@ -902,7 +1315,7 @@ namespace BZ2TerrainEditor
                         byte[] row = new byte[terrain.Width * 2];
 
                         for (int y = this.terrain.Height - 1; y >= 0; y--)
-                            {
+                        {
                             if (stream.Read(row, 0, row.Length) < row.Length)
                                 throw new Exception("Unexpected end of stream.");
 
@@ -918,6 +1331,7 @@ namespace BZ2TerrainEditor
                             }
                         }
                     }
+                    RegenerateDerivativeData();
                 }
                 else if (lastHeightFilterIndex == 5)
                 {
@@ -945,6 +1359,7 @@ namespace BZ2TerrainEditor
                             }
                         }
                     }
+                    RegenerateDerivativeData();
                 }
                 else if (lastHeightFilterIndex == 6) { throw new NotImplementedException(); }
                 else if (lastHeightFilterIndex == 7)
@@ -995,6 +1410,7 @@ namespace BZ2TerrainEditor
                         
                         input.Close();
                     }
+                    RegenerateDerivativeData();
                 }
                 else if (lastHeightFilterIndex == 8)
                 {
@@ -1024,6 +1440,7 @@ namespace BZ2TerrainEditor
                             }
                         }
                     }
+                    RegenerateDerivativeData();
                 }
             }
             catch (Exception ex)
@@ -1814,7 +2231,6 @@ namespace BZ2TerrainEditor
 
             this.saveImage(this.tileMap1Preview.Image);
         }
-
         
         private void tileMap2Preview_Click(object sender, EventArgs e)
         {
@@ -1839,7 +2255,6 @@ namespace BZ2TerrainEditor
             this.saveImage(this.tileMap2Preview.Image);
         }
 
-        
         private void tileMap3Preview_Click(object sender, EventArgs e)
         {
             if (this.terrain == null)
@@ -1861,6 +2276,50 @@ namespace BZ2TerrainEditor
                 return;
 
             this.saveImage(this.tileMap3Preview.Image);
+        }
+
+        #endregion
+
+        #region Flatness Maps
+
+        private void tileAverageHeightPreview_Click(object sender, EventArgs e)
+        {
+            if (this.terrain == null)
+                return;
+
+            ImageViewer viewer = new ImageViewer(this.tileAverageHeightPreview.Image, "Cluster Average Height Map");
+            this.forms.Add(viewer);
+            viewer.Show();
+        }
+
+        private void tileFlatnessPreview_Click(object sender, EventArgs e)
+        {
+            if (this.terrain == null)
+                return;
+
+            ImageViewer viewer = new ImageViewer(this.tileFlatnessPreview.Image, "Cluster Flatness Map");
+            this.forms.Add(viewer);
+            viewer.Show();
+        }
+
+        private void tileFlatZones_Click(object sender, EventArgs e)
+        {
+            if (this.terrain == null)
+                return;
+
+            ImageViewer viewer = new ImageViewer(this.tileFlatZones.Image, "Cluster Flat Zones Map");
+            this.forms.Add(viewer);
+            viewer.Show();
+        }
+
+        private void tileFlatZoneIDs_Click(object sender, EventArgs e)
+        {
+            if (this.terrain == null)
+                return;
+
+            ImageViewer viewer = new ImageViewer(this.tileFlatZoneIDs.Image, "Cluster Flat Zones ID Map");
+            this.forms.Add(viewer);
+            viewer.Show();
         }
 
         #endregion

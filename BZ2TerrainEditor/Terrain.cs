@@ -88,6 +88,11 @@ namespace BZ2TerrainEditor
         private Single heightMapFloatMin;
         private Single heightMapFloatMax;
 
+        public readonly float[,] TileAverageHeight;
+        public readonly float[,] TileFlatness;
+        private Single tileFlatnessMapMin;
+        private Single tileFlatnessMapMax;
+
         #endregion
 
         #region Properties
@@ -110,6 +115,15 @@ namespace BZ2TerrainEditor
         public Single HeightMapFloatMax
         {
             get { return this.heightMapFloatMax; }
+        }
+        public Single TileFlatnessMapMin
+        {
+            get { return this.tileFlatnessMapMin; }
+        }
+
+        public Single TileFlatnessMapMax
+        {
+            get { return this.tileFlatnessMapMax; }
         }
 
         #endregion
@@ -151,24 +165,63 @@ namespace BZ2TerrainEditor
 			this.AlphaMap3 = new byte[width, height];
 			this.CellMap = new CellType[width, height];
 			this.InfoMap = new uint[width / CLUSTER_SIZE, height / CLUSTER_SIZE];
+            this.TileAverageHeight = new float[width / CLUSTER_SIZE, height / CLUSTER_SIZE];
+            this.TileFlatness = new float[width / CLUSTER_SIZE, height / CLUSTER_SIZE];
 
-			this.Clear();
+            this.Clear();
 
 			this.heightMapMin = short.MaxValue;
 			this.heightMapMax = short.MinValue;
             this.heightMapFloatMin = float.MaxValue;
             this.heightMapFloatMax = float.MinValue;
-
         }
 
-		#endregion
+        #endregion
 
-		#region Methods
+        #region Methods
 
-		/// <summary>
-		/// Updates the min/max values.
-		/// </summary>
-		public void UpdateMinMax()
+        public void RegenerateDerivativeData()
+        {
+            this.tileFlatnessMapMin = float.MaxValue;
+            this.tileFlatnessMapMax = float.MinValue;
+
+            for (int ty = 0; ty < Height / CLUSTER_SIZE; ty++)
+            {
+                for(int tx = 0; tx < Width / CLUSTER_SIZE; tx++)
+                {
+                    float totalHeight = 0f;
+                    float minHeight = float.MaxValue;
+                    float maxHeight = float.MinValue;
+                    float flatness = 0f;
+                    int counter = 0;
+                    for (int y = 0; y <= CLUSTER_SIZE; y++)
+                    {
+                        for(int x = 0; x <= CLUSTER_SIZE; x++)
+                        {
+                            int heightIndexX = tx * CLUSTER_SIZE + x;
+                            int heightIndexY = ty * CLUSTER_SIZE + y;
+                            if (heightIndexX >= Width || heightIndexY >= Height)
+                                continue;
+                            float height = (Version < 4) ? HeightMap[heightIndexX, heightIndexY] : HeightMapFloat[heightIndexX, heightIndexY];
+                            totalHeight += height;
+                            if (height < minHeight) minHeight = height;
+                            if (height > maxHeight) maxHeight = height;
+                            flatness = maxHeight - minHeight;
+                            counter++;
+                        }
+                    }
+                    TileAverageHeight[tx, ty] = totalHeight / counter;
+                    TileFlatness[tx, ty] = flatness;
+                    if (flatness < tileFlatnessMapMin) tileFlatnessMapMin = flatness;
+                    if (flatness > tileFlatnessMapMax) tileFlatnessMapMax = flatness;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates the min/max values.
+        /// </summary>
+        public void UpdateMinMax()
 		{
             this.heightMapMin = short.MaxValue;
             this.heightMapMax = short.MinValue;
@@ -648,6 +701,8 @@ namespace BZ2TerrainEditor
 					this.InfoMap[x, y] = 0;
 				}
 			}
+
+            RegenerateDerivativeData();
 		}
 
 		/// <summary>
@@ -962,7 +1017,9 @@ namespace BZ2TerrainEditor
 				}
 			}
 
-			return terrain;
+            terrain.RegenerateDerivativeData();
+
+            return terrain;
 		}
 
 		public void Translate(int translation)
