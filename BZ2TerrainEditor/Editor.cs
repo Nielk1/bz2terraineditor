@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ProgressBar;
 
 namespace BZ2TerrainEditor
@@ -61,12 +62,19 @@ namespace BZ2TerrainEditor
 
         #endregion
 
+        #region Controls
+
+        private System.Windows.Forms.ToolTip toolTip1 = new System.Windows.Forms.ToolTip();
+        NumericUpDown nudFlatEnough = new NumericUpDown();
+        NumericUpDown nudFlatMerge = new NumericUpDown();
+
+        #endregion
+
         #region Properties
 
         #endregion
 
         #region Constructors
-
         public Editor()
         {
             this.InitializeComponent();
@@ -74,7 +82,37 @@ namespace BZ2TerrainEditor
 
             this.imageHandles = new List<GCHandle>();
             this.forms = new List<Form>();
+
+            nudFlatEnough.Minimum = 0;
+            nudFlatEnough.Maximum = 1;
+            nudFlatEnough.Value = 0.01M;
+            nudFlatEnough.DecimalPlaces = 2;
+            nudFlatEnough.Increment = 0.01M;
+
+            nudFlatMerge.Minimum = 0;
+            nudFlatMerge.Maximum = 1;
+            nudFlatMerge.Value = 0M;
+            nudFlatMerge.DecimalPlaces = 2;
+            nudFlatMerge.Increment = 0.01M;
+
+            nudFlatEnough.ValueChanged += FlatSetting_ValueChanged;
+            nudFlatMerge.ValueChanged += FlatSetting_ValueChanged;
+
+            ToolStripControlHost host1 = new ToolStripControlHost(nudFlatEnough);
+            ToolStripControlHost host2 = new ToolStripControlHost(nudFlatMerge);
+
+            toolTip1.SetToolTip(nudFlatEnough, "Maximum allowed height variant for \"near flat\" tile in meters");
+            toolTip1.SetToolTip(nudFlatMerge, "Maximum allowed height variant when merging flat-zones in meters");
+
+            tsFlatness.Items.Add(host1);
+            tsFlatness.Items.Add(host2);
+
             this.updateTitle();
+        }
+
+        private void FlatSetting_ValueChanged(object sender, EventArgs e)
+        {
+            RegenerateFlatZoneData();
         }
 
         public Editor(string fileName)
@@ -192,13 +230,18 @@ namespace BZ2TerrainEditor
             this.flowLayout.Enabled = true;
         }
 
+        private void RegenerateFlatZoneData()
+        {
+            var images = this.generateFlatZonesImage();
+            this.tileFlatZones.Image = images.Item1;
+            this.tileFlatZoneIDs.Image = images.Item2;
+        }
+
         private void RegenerateDerivativeData()
         {
             this.tileAverageHeightPreview.Image = this.generate16BitImage(this.terrain.TileAverageHeight, this.terrain.HeightMapFloatMin, this.terrain.HeightMapFloatMax);
             this.tileFlatnessPreview.Image = this.generate16BitImage(this.terrain.TileFlatness, this.terrain.TileFlatnessMapMin, this.terrain.TileFlatnessMapMax);
-            var images = this.generateFlatZonesImage();
-            this.tileFlatZones.Image = images.Item1;
-            this.tileFlatZoneIDs.Image = images.Item2;
+            RegenerateFlatZoneData();
         }
 
         //
@@ -381,8 +424,10 @@ namespace BZ2TerrainEditor
                 return (null, null); // TODO double check this is correct, will probably crash
 
 
-            float maxRange = 0.01f;
-            float MergeTolerance = 0.01f;
+            //float maxRange = 0.01f;
+            //float MergeTolerance = 0.01f;
+            float maxRange = (float)nudFlatEnough.Value;
+            float MergeTolerance = (float)nudFlatMerge.Value;
 
 
             int width = terrain.Width / terrain.CLUSTER_SIZE;
@@ -2327,5 +2372,42 @@ namespace BZ2TerrainEditor
         #endregion
 
         #endregion
+
+        private void toolStripButton2_Click(object sender, EventArgs e)
+        {
+            if (this.terrain == null)
+                return;
+
+            this.saveImage(this.tileAverageHeightPreview.Image);
+        }
+
+        private void toolStripButton4_Click(object sender, EventArgs e)
+        {
+            if (this.terrain == null)
+                return;
+
+            this.saveImage(this.tileFlatnessPreview.Image);
+        }
+
+        private void toolStripButton6_Click(object sender, EventArgs e)
+        {
+            if (this.terrain == null)
+                return;
+
+            this.saveImage(this.tileFlatZones.Image);
+        }
+
+        private void toolStripButton8_Click(object sender, EventArgs e)
+        {
+            if (this.terrain == null)
+                return;
+
+            this.saveImage(this.tileFlatZoneIDs.Image);
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

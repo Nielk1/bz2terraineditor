@@ -122,7 +122,7 @@
             this.tileFlatZoneIDs = new System.Windows.Forms.PictureBox();
             this.tileFlatZones = new System.Windows.Forms.PictureBox();
             this.tileFlatnessPreview = new System.Windows.Forms.PictureBox();
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.tsFlatness = new System.Windows.Forms.ToolStrip();
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
@@ -130,6 +130,8 @@
             this.toolStripButton6 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton8 = new System.Windows.Forms.ToolStripButton();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.tileAverageHeightPreview = new System.Windows.Forms.PictureBox();
             this.menu.SuspendLayout();
             this.tools.SuspendLayout();
@@ -166,7 +168,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.tileFlatZoneIDs)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tileFlatZones)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tileFlatnessPreview)).BeginInit();
-            this.toolStrip1.SuspendLayout();
+            this.tsFlatness.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tileAverageHeightPreview)).BeginInit();
             this.SuspendLayout();
             // 
@@ -1128,7 +1130,7 @@
             this.flatnessMapGroup.Controls.Add(this.tileFlatZoneIDs);
             this.flatnessMapGroup.Controls.Add(this.tileFlatZones);
             this.flatnessMapGroup.Controls.Add(this.tileFlatnessPreview);
-            this.flatnessMapGroup.Controls.Add(this.toolStrip1);
+            this.flatnessMapGroup.Controls.Add(this.tsFlatness);
             this.flatnessMapGroup.Controls.Add(this.tileAverageHeightPreview);
             this.flatnessMapGroup.Location = new System.Drawing.Point(3, 683);
             this.flatnessMapGroup.Name = "flatnessMapGroup";
@@ -1179,22 +1181,24 @@
             this.tileFlatnessPreview.TabStop = false;
             this.tileFlatnessPreview.Click += new System.EventHandler(this.tileFlatnessPreview_Click);
             // 
-            // toolStrip1
+            // tsFlatness
             // 
-            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsFlatness.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.tsFlatness.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripButton2,
             this.toolStripSeparator1,
             this.toolStripButton4,
             this.toolStripSeparator2,
             this.toolStripButton6,
             this.toolStripSeparator3,
-            this.toolStripButton8});
-            this.toolStrip1.Location = new System.Drawing.Point(3, 16);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(290, 25);
-            this.toolStrip1.TabIndex = 2;
-            this.toolStrip1.Text = "toolStrip2";
+            this.toolStripButton8,
+            this.toolStripSeparator4,
+            this.toolStripButton1});
+            this.tsFlatness.Location = new System.Drawing.Point(3, 16);
+            this.tsFlatness.Name = "tsFlatness";
+            this.tsFlatness.Size = new System.Drawing.Size(290, 25);
+            this.tsFlatness.TabIndex = 2;
+            this.tsFlatness.Text = "toolStrip2";
             // 
             // toolStripButton2
             // 
@@ -1203,7 +1207,8 @@
             this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton2.Name = "toolStripButton2";
             this.toolStripButton2.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton2.Text = "Export Layer 0";
+            this.toolStripButton2.Text = "Export Cluster Average Height Map";
+            this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
             // 
             // toolStripSeparator1
             // 
@@ -1217,7 +1222,8 @@
             this.toolStripButton4.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton4.Name = "toolStripButton4";
             this.toolStripButton4.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton4.Text = "Export Layer 1";
+            this.toolStripButton4.Text = "Export Cluster Flatness Map";
+            this.toolStripButton4.Click += new System.EventHandler(this.toolStripButton4_Click);
             // 
             // toolStripSeparator2
             // 
@@ -1231,7 +1237,8 @@
             this.toolStripButton6.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripButton6.Name = "toolStripButton6";
             this.toolStripButton6.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton6.Text = "Export Layer 2";
+            this.toolStripButton6.Text = "Export Cluster Flat Zones Map";
+            this.toolStripButton6.Click += new System.EventHandler(this.toolStripButton6_Click);
             // 
             // toolStripSeparator3
             // 
@@ -1246,6 +1253,24 @@
             this.toolStripButton8.Name = "toolStripButton8";
             this.toolStripButton8.Size = new System.Drawing.Size(23, 22);
             this.toolStripButton8.Text = "Export Layer 3";
+            this.toolStripButton8.ToolTipText = "Export Cluster Flat Zones ID Map";
+            this.toolStripButton8.Click += new System.EventHandler(this.toolStripButton8_Click);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 25);
+            // 
+            // toolStripButton1
+            // 
+            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton1.Image = global::BZ2TerrainEditor.Properties.Resources.map;
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton1.Text = "toolStripButton1";
+            this.toolStripButton1.ToolTipText = "Apply  Height Corrections";
+            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
             // 
             // tileAverageHeightPreview
             // 
@@ -1328,8 +1353,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.tileFlatZoneIDs)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tileFlatZones)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tileFlatnessPreview)).EndInit();
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
+            this.tsFlatness.ResumeLayout(false);
+            this.tsFlatness.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tileAverageHeightPreview)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -1431,7 +1456,7 @@
         private System.Windows.Forms.PictureBox tileFlatZoneIDs;
         private System.Windows.Forms.PictureBox tileFlatZones;
         private System.Windows.Forms.PictureBox tileFlatnessPreview;
-        private System.Windows.Forms.ToolStrip toolStrip1;
+        private System.Windows.Forms.ToolStrip tsFlatness;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripButton4;
@@ -1440,5 +1465,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripButton toolStripButton8;
         private System.Windows.Forms.PictureBox tileAverageHeightPreview;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripButton toolStripButton1;
     }
 }
