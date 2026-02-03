@@ -26,7 +26,7 @@ namespace BZ2TerrainEditor
 			this.image = image;
 			//this.filter = InterpolationMode.Bilinear;
 			this.filter = InterpolationMode.NearestNeighbor;
-            this.contextMenuFilterBilinear.Checked = true;
+            this.contextMenuFilterNearest.Checked = true;
 
 			this.ClientSize = image.Size;
 			while (this.ClientSize.Width > 512 || this.ClientSize.Height > 512)
@@ -52,7 +52,7 @@ namespace BZ2TerrainEditor
 			base.OnPaint(e);
 			e.Graphics.Clear(this.BackColor);
 			e.Graphics.InterpolationMode = this.filter;
-			if (e.Graphics.InterpolationMode == InterpolationMode.NearestNeighbor)
+			//if (e.Graphics.InterpolationMode == InterpolationMode.NearestNeighbor)
 				e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
 
 			float factor = Math.Min((float)this.ClientSize.Width / (float)this.image.Width, (float)this.ClientSize.Height / (float)this.image.Height);

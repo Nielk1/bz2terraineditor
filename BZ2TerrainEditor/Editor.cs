@@ -240,7 +240,7 @@ namespace BZ2TerrainEditor
         private void RegenerateDerivativeData()
         {
             this.tileAverageHeightPreview.Image = this.generate16BitImage(this.terrain.TileAverageHeight, this.terrain.HeightMapFloatMin, this.terrain.HeightMapFloatMax);
-            this.tileFlatnessPreview.Image = this.generate16BitImage(this.terrain.TileFlatness, this.terrain.TileFlatnessMapMin, this.terrain.TileFlatnessMapMax);
+            this.tileFlatnessPreview.Image = this.generate16BitImage(this.terrain.TileFlatness, 0f, this.terrain.TileFlatnessMapMax);
             RegenerateFlatZoneData();
         }
 
@@ -684,7 +684,7 @@ namespace BZ2TerrainEditor
                         float newHeight = regionIdx < 0 ? avgHeight : regionHeights[region];
                         if (regionIdx < 0)
                         {
-                            byte color = (byte)((float)(rangeHeight - terrain.TileFlatnessMapMin) / (float)(terrain.TileFlatnessMapMax - terrain.TileFlatnessMapMin) * 255.0f);
+                            byte color = (byte)(rangeHeight / terrain.TileFlatnessMapMax * 255.0f);
                             buffer2[j++] = color;
                             buffer2[j++] = color;
                             buffer2[j++] = color;
@@ -696,9 +696,12 @@ namespace BZ2TerrainEditor
                             {
                                 if (newHeight != avgHeight)
                                 {
-                                    buffer2[j++] = (byte)(col.B * 0.5f);
-                                    buffer2[j++] = (byte)(col.G * 0.5f);
-                                    buffer2[j++] = (byte)(col.R * 0.5f);
+                                    //buffer2[j++] = (byte)(col.B * 0.5f);
+                                    //buffer2[j++] = (byte)(col.G * 0.5f);
+                                    //buffer2[j++] = (byte)(col.R * 0.5f);
+                                    buffer2[j++] = 0;
+                                    buffer2[j++] = 0;
+                                    buffer2[j++] = 255;
                                 }
                                 else
                                 {
@@ -761,7 +764,7 @@ namespace BZ2TerrainEditor
                     else
                     {
                         // greyscale
-                        byte color = (byte)((float)(rangeHeight - terrain.TileFlatnessMapMin) / (float)(terrain.TileFlatnessMapMax - terrain.TileFlatnessMapMin) * 255.0f);
+                        byte color = (byte)(rangeHeight / terrain.TileFlatnessMapMax * 255.0f);
                         buffer[i++] = color;
                         buffer[i++] = color;
                         buffer[i++] = color;
@@ -1762,6 +1765,8 @@ namespace BZ2TerrainEditor
             this.terrain.RescaleHeight((float)dialog.OriginalMin, (float)dialog.OriginalMax, (float)dialog.NewMin, (float)dialog.NewMax);
             this.initialize();
             this.changed = true;
+
+            RegenerateDerivativeData();
         }
 
         private void heightMapTranslate_Click(object sender, EventArgs e)

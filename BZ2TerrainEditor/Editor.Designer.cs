@@ -179,7 +179,7 @@
             this.menuHelp});
             this.menu.Location = new System.Drawing.Point(0, 0);
             this.menu.Name = "menu";
-            this.menu.Size = new System.Drawing.Size(1232, 24);
+            this.menu.Size = new System.Drawing.Size(1258, 24);
             this.menu.TabIndex = 0;
             this.menu.Text = "mainMenu";
             // 
@@ -277,7 +277,7 @@
             this.toolsAbout});
             this.tools.Location = new System.Drawing.Point(0, 24);
             this.tools.Name = "tools";
-            this.tools.Size = new System.Drawing.Size(1232, 25);
+            this.tools.Size = new System.Drawing.Size(1258, 25);
             this.tools.TabIndex = 9;
             this.tools.Text = "toolStrip1";
             // 
@@ -936,7 +936,7 @@
             this.flowLayout.Enabled = false;
             this.flowLayout.Location = new System.Drawing.Point(12, 52);
             this.flowLayout.Name = "flowLayout";
-            this.flowLayout.Size = new System.Drawing.Size(1208, 680);
+            this.flowLayout.Size = new System.Drawing.Size(1234, 680);
             this.flowLayout.TabIndex = 11;
             // 
             // tileMapGroup
@@ -1290,7 +1290,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1232, 744);
+            this.ClientSize = new System.Drawing.Size(1258, 744);
             this.Controls.Add(this.flowLayout);
             this.Controls.Add(this.tools);
             this.Controls.Add(this.menu);

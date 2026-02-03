@@ -90,7 +90,7 @@ namespace BZ2TerrainEditor
 
         public readonly float[,] TileAverageHeight;
         public readonly float[,] TileFlatness;
-        private Single tileFlatnessMapMin;
+        //private Single tileFlatnessMapMin;
         private Single tileFlatnessMapMax;
 
         #endregion
@@ -116,10 +116,10 @@ namespace BZ2TerrainEditor
         {
             get { return this.heightMapFloatMax; }
         }
-        public Single TileFlatnessMapMin
-        {
-            get { return this.tileFlatnessMapMin; }
-        }
+        //public Single TileFlatnessMapMin
+        //{
+        //    get { return this.tileFlatnessMapMin; }
+        //}
 
         public Single TileFlatnessMapMax
         {
@@ -182,7 +182,7 @@ namespace BZ2TerrainEditor
 
         public void RegenerateDerivativeData()
         {
-            this.tileFlatnessMapMin = float.MaxValue;
+            //this.tileFlatnessMapMin = float.MaxValue;
             this.tileFlatnessMapMax = float.MinValue;
 
             for (int ty = 0; ty < Height / CLUSTER_SIZE; ty++)
@@ -212,7 +212,7 @@ namespace BZ2TerrainEditor
                     }
                     TileAverageHeight[tx, ty] = totalHeight / counter;
                     TileFlatness[tx, ty] = flatness;
-                    if (flatness < tileFlatnessMapMin) tileFlatnessMapMin = flatness;
+                    //if (flatness < tileFlatnessMapMin) tileFlatnessMapMin = flatness;
                     if (flatness > tileFlatnessMapMax) tileFlatnessMapMax = flatness;
                 }
             }
