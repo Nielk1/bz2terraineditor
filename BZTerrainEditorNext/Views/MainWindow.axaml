@@ -1,0 +1,67 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:BZTerrainEditorNext.ViewModels"
+        xmlns:editor="using:BZTerrainEditorNext.Editor"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:nodify="https://miroiu.github.io/nodify"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="BZTerrainEditorNext.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="BZTerrainEditorNext">
+
+    <Window.Resources>
+        <DataTemplate x:Key="NodeViewModelTemplate" DataType="editor:NodeViewModel">
+            <Border Background="White" BorderBrush="Black" BorderThickness="1" Padding="8">
+                <TextBlock Text="{Binding Title}" />
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+    
+
+      <SplitView IsPaneOpen="True"
+             DisplayMode="CompactInline"
+             OpenPaneLength="275">
+    <SplitView.Pane>
+      <DockPanel Margin="10" x:Name="MainNav">
+        <Panel DockPanel.Dock="Top">
+          <Image Source="/Assets/avalonia-logo.ico"
+                 Height="40"
+                 Width="40"
+                 VerticalAlignment="Top"
+                 HorizontalAlignment="Left"
+                 RenderOptions.BitmapInterpolationMode="HighQuality"/>
+          <TextBlock Text="BZ Terrain Editor"
+                     FontSize="24"
+                     FontWeight="Bold"
+                     Margin="44 0 0 16"/>
+          <TextBlock Margin="44 23 0 0"
+                     Text="{Binding VersionString}"
+                     FontSize="12"/>
+        </Panel>
+        <ScrollViewer AllowAutoHide="True">
+          <StackPanel Margin="0 0 10 0">
+            <TextBlock Text="LAUNCH"/>
+            <TextBlock Margin="0 10 0 0"
+                       Text="MODS" />
+
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </SplitView.Pane>
+    <SplitView.Content>
+        <nodify:NodifyEditor
+            ItemsSource="{Binding Nodes}"
+            Connections="{Binding Connections}"
+            SelectedItems="{Binding SelectedItems}"
+            ItemTemplate="{StaticResource NodeViewModelTemplate}" />
+    </SplitView.Content>
+  </SplitView>
+</Window>
