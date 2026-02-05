@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36212.18 d17.14
+VisualStudioVersion = 17.14.36212.18
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BZ2TerrainEditor", "BZ2TerrainEditor\BZ2TerrainEditor.csproj", "{DEE4FBCC-F404-48FF-A0B9-2D2FF0899459}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BZTerrainEditorNext", "BZTerrainEditorNext\BZTerrainEditorNext.csproj", "{E72D143E-F216-4357-B8CE-DE0FD9578076}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BZTerrainEditor", "BZTerrainEditor\BZTerrainEditor.csproj", "{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{DEE4FBCC-F404-48FF-A0B9-2D2FF0899459}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DEE4FBCC-F404-48FF-A0B9-2D2FF0899459}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DEE4FBCC-F404-48FF-A0B9-2D2FF0899459}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E72D143E-F216-4357-B8CE-DE0FD9578076}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E72D143E-F216-4357-B8CE-DE0FD9578076}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E72D143E-F216-4357-B8CE-DE0FD9578076}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E72D143E-F216-4357-B8CE-DE0FD9578076}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
