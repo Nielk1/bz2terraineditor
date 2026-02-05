@@ -2,13 +2,14 @@
 using DynamicData;
 using NodeNetwork.ViewModels;
 using System.Windows;
+using MahApps.Metro.Controls;
 
 namespace BZTerrainEditor
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
         public MainWindow()
         {
