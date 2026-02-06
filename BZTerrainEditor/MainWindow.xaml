@@ -7,58 +7,82 @@
         xmlns:nodenetwork="clr-namespace:NodeNetwork.Views;assembly=NodeNetwork"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <mah:MetroWindow.Resources>
-        <Style TargetType="TabItem" x:Key="VerticalTabHeader">
-            <Setter Property="Padding" Value="4,8"/>
-            <Setter Property="HeaderTemplate">
-                <Setter.Value>
-                    <DataTemplate>
-                        <ContentPresenter Content="{Binding}">
-                            <ContentPresenter.LayoutTransform>
-                                <RotateTransform Angle="270" />
-                            </ContentPresenter.LayoutTransform>
-                        </ContentPresenter>
-                    </DataTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </mah:MetroWindow.Resources>
+        Title="MainWindow" Height="625" Width="800" MinHeight="625" MinWidth="800">
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_New Workflow" />
-                <MenuItem Header="_Open Workflow" />
-                <MenuItem Header="_Save Workflow" />
-            </MenuItem>
-        </Menu>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250" MinWidth="100"/>
+                <ColumnDefinition Width="360" MinWidth="250"/>
                 <!-- Left panel width -->
-                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="4"/>
                 <!-- Splitter width -->
                 <ColumnDefinition Width="*"/>
                 <!-- Main content -->
             </Grid.ColumnDefinitions>
 
-            <TabControl TabStripPlacement="Left" >
-                <TabControl.Resources>
-                    <Style TargetType="TabItem" BasedOn="{StaticResource VerticalTabHeader}" />
-                </TabControl.Resources>
-                <TabItem Header="Variables">
+            <mah:MetroTabControl TabStripPlacement="Left" Grid.Column="0">
+                <mah:MetroTabControl.Resources>
+                    <Style TargetType="mah:MetroTabItem">
+                        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.SemiTransparent}" />
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </mah:MetroTabControl.Resources>
+                <mah:MetroTabItem>
+                    <mah:MetroTabItem.Header>
+                        <iconPacks:PackIconLucide Kind="Folder"
+                                                  Width="36" Height="36" Padding="2"
+                                                  Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:MetroTabItem}}, Path=Foreground}" />
+                    </mah:MetroTabItem.Header>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <mah:Tile Title="New Workspace" Width="Auto"
+                                      mah:ControlsHelper.MouseOverBorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}">
+                                <iconPacks:PackIconMaterial Kind="FolderPlusOutline" Width="40" Height="40" Margin="0,-5,0,0" />
+                            </mah:Tile>
+                            <mah:Tile Title="Save Current Workspace" Width="Auto"
+                                      mah:ControlsHelper.MouseOverBorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}">
+                                <iconPacks:PackIconMaterial Kind="ContentSave" Width="40" Height="40" Margin="0,-5,0,0" />
+                            </mah:Tile>
+                            <mah:Tile Title="Import Workspace" Width="Auto"
+                                      mah:ControlsHelper.MouseOverBorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}">
+                                <iconPacks:PackIconMaterial Kind="ApplicationImport" Width="40" Height="40" Margin="0,-5,0,0" />
+                            </mah:Tile>
+                            <mah:Tile Title="Export Current Workspace"  Width="Auto"
+                                      mah:ControlsHelper.MouseOverBorderBrush="{DynamicResource MahApps.Brushes.ThemeForeground}">
+                                <iconPacks:PackIconMaterial Kind="ApplicationExport" Width="40" Height="40" Margin="0,-5,0,0" />
+                            </mah:Tile>
+                        </StackPanel>
+                    </ScrollViewer>
+                </mah:MetroTabItem>
+                <mah:MetroTabItem>
+                    <mah:MetroTabItem.Header>
+                        <iconPacks:PackIconLucide Kind="FolderTree"
+                                                  Width="36" Height="36" Padding="2"
+                                                  Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:MetroTabItem}}, Path=Foreground}" />
+                    </mah:MetroTabItem.Header>
+                </mah:MetroTabItem>
+                <mah:MetroTabItem>
+                    <mah:MetroTabItem.Header>
+                        <iconPacks:PackIconLucide Kind="Variable"
+                                                  Width="36" Height="36" Padding="2"
+                                                  Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:MetroTabItem}}, Path=Foreground}" />
+                    </mah:MetroTabItem.Header>
                     <xctk:PropertyGrid SelectedObject="{Binding YourObject}"/>
-                </TabItem>
-            </TabControl>
+                </mah:MetroTabItem>
+
+            </mah:MetroTabControl>
 
             <!-- Draggable splitter -->
             <GridSplitter Grid.Column="1"
-                          Width="5"
+                          Width="2"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Stretch"
-                          Background="Gray"
-                          ShowsPreview="True"/>
+                          Background="{DynamicResource MahApps.Brushes.Accent}"/>
             
             <nodenetwork:NetworkView x:Name="networkView"
                                      Grid.Column="2"/>
