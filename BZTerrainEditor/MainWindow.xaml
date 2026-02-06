@@ -9,11 +9,11 @@
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
-        Title="MainWindow" Height="625" Width="800" MinHeight="625" MinWidth="800">
+        Title="MainWindow" Height="625" Width="1000" MinHeight="625" MinWidth="1000">
     <DockPanel>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="360" MinWidth="250"/>
+                <ColumnDefinition Width="260" MinWidth="250"/>
                 <!-- Left panel width -->
                 <ColumnDefinition Width="4"/>
                 <!-- Splitter width -->

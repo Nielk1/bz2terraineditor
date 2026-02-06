@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BZ2TerrainEditor", "BZ2Terr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BZTerrainEditor", "BZTerrainEditor\BZTerrainEditor.csproj", "{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deps", "Deps", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BZMapTools", "Deps\BZMapTools\BZMapTools\BZMapTools.csproj", "{C549A55F-425B-5681-5D3A-473334223D40}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,9 +25,16 @@ Global
 		{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4B4A1FEC-FC45-4EDA-BA9A-614DF8ADF013}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C549A55F-425B-5681-5D3A-473334223D40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C549A55F-425B-5681-5D3A-473334223D40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C549A55F-425B-5681-5D3A-473334223D40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C549A55F-425B-5681-5D3A-473334223D40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C549A55F-425B-5681-5D3A-473334223D40} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29C597BE-8A51-4692-A716-5193D6656DE4}

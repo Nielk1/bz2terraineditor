@@ -4,15 +4,17 @@
                     xmlns:controls="clr-namespace:NodeNetwork.Views.Controls;assembly=NodeNetwork"
                     xmlns:viewModels="clr-namespace:NodeNetwork.ViewModels;assembly=NodeNetwork"
                     xmlns:converters="clr-namespace:BZTerrainEditor.Converters"
+                    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
                     xmlns:reactiveUi="http://reactiveui.net">
     <converters:BothNonEmptyToVisibilityConverter x:Key="BothNonEmptyToVisibilityConverter"/>
     <Style TargetType="{x:Type views:NodeView}">
-        <Setter Property="Background" Value="#5D9CEC"/>
-        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Accent}"/>
+        <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.IdealForegroundAccent}"/>
         <Setter Property="TitleFontFamily" Value="Segoe UI Semibold"/>
         <Setter Property="TitleFontSize" Value="18"/>
-        <Setter Property="BorderBrush" Value="Orange"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.ThemeForeground}"/>
+        <!--<Setter Property="CornerRadius" Value="4"/>-->
+        <Setter Property="CornerRadius" Value="0"/>
         <Setter Property="ArrowSize" Value="20"/>
         <Setter Property="EndpointsStackingOrientation" Value="Vertical"/>
         <Setter Property="IsTabStop" Value="False"/>
@@ -24,8 +26,7 @@
                             <VisualStateGroup Name="{x:Static views:NodeView.SelectedVisualStatesGroup}">
                                 <VisualState Name="{x:Static views:NodeView.SelectedState}">
                                     <Storyboard>
-                                        <ThicknessAnimation Duration="0" To="-3" 
-                                                            Storyboard.TargetName="Container" Storyboard.TargetProperty="Margin"/>
+                                        <ThicknessAnimation Duration="0" To="-3" Storyboard.TargetName="Container" Storyboard.TargetProperty="Margin"/>
                                         <ThicknessAnimation Duration="0" To="3" Storyboard.TargetName="Border" Storyboard.TargetProperty="BorderThickness"/>
                                     </Storyboard>
                                 </VisualState>
@@ -140,7 +141,7 @@
                                         </ItemsControl>
                                         <Border Grid.Column="1"
                                                 Width="2"
-                                                Background="#FFFFFF"
+                                                Background="{DynamicResource MahApps.Brushes.ThemeForeground}"
                                                 Margin="5,0"
                                                 VerticalAlignment="Stretch">
                                             <Border.Visibility>

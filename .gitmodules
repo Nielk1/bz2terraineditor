@@ -1,0 +1,3 @@
+[submodule "Deps/BZMapTools"]
+	path = Deps/BZMapTools
+	url = https://github.com/Nielk1/BZMapTools
