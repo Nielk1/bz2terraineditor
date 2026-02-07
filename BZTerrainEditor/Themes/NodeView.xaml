@@ -2,7 +2,6 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:views="clr-namespace:NodeNetwork.Views;assembly=NodeNetwork"
                     xmlns:controls="clr-namespace:NodeNetwork.Views.Controls;assembly=NodeNetwork"
-                    xmlns:controls2="clr-namespace:BZTerrainEditor.Views.Controls"
                     xmlns:viewModels="clr-namespace:NodeNetwork.ViewModels;assembly=NodeNetwork"
                     xmlns:converters="clr-namespace:BZTerrainEditor.Converters"
                     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
@@ -109,15 +108,7 @@
                                         <Image x:Name="HeaderIcon" MaxWidth="{TemplateBinding ArrowSize}" MaxHeight="{TemplateBinding ArrowSize}" DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                         <TextBlock x:Name="NameLabel" TextWrapping="Wrap" Background="Transparent" Foreground="{TemplateBinding Foreground}" DockPanel.Dock="Left" HorizontalAlignment="Left" VerticalAlignment="Center" TextAlignment="Center"
                                                    FontFamily="{TemplateBinding TitleFontFamily}" FontSize="{TemplateBinding TitleFontSize}" Margin="10,0,0,0"/>
-                                        <controls2:ArrowToggleButton x:Name="CollapseButton"
-                                                                     Width="{TemplateBinding ArrowSize}"
-                                                                     Height="{TemplateBinding ArrowSize}"
-                                                                     DockPanel.Dock="Right"
-                                                                     HorizontalAlignment="Right"
-                                                                     VerticalAlignment="Center"
-                                                                     ArrowCheckedColor="{DynamicResource MahApps.Brushes.ThemeForeground}"
-                                                                     ArrowUncheckedColor="{DynamicResource MahApps.Brushes.SemiTransparent}"
-                                                                     Margin="20,0,10,0"/>
+                                        <controls:ArrowToggleButton x:Name="CollapseButton" Width="{TemplateBinding ArrowSize}" Height="{TemplateBinding ArrowSize}" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="20,0,10,0"/>
                                     </DockPanel>
                                     <Canvas x:Name="HeaderBottomMargin" Width="auto" Height="3"/>
 

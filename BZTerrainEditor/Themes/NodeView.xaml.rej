@@ -1,0 +1,13 @@
+diff a/BZTerrainEditor/Themes/NodeView.xaml b/BZTerrainEditor/Themes/NodeView.xaml	(rejected hunks)
+@@ -1,10 +1,11 @@
+ ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:views="clr-namespace:NodeNetwork.Views;assembly=NodeNetwork"
+                     xmlns:controls="clr-namespace:NodeNetwork.Views.Controls;assembly=NodeNetwork"
++                    xmlns:controls2="clr-namespace:BZTerrainEditor.Views.Controls"
+                     xmlns:viewModels="clr-namespace:NodeNetwork.ViewModels;assembly=NodeNetwork"
+                     xmlns:converters="clr-namespace:BZTerrainEditor.Converters"
+                     xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+                     xmlns:reactiveUi="http://reactiveui.net">
+     <converters:BothNonEmptyToVisibilityConverter x:Key="BothNonEmptyToVisibilityConverter"/>
+     <Style TargetType="{x:Type views:NodeView}">
