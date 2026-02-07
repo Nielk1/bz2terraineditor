@@ -23,7 +23,7 @@ namespace BZTerrainEditor
             //Locator.CurrentMutable.Register(() => new SideBySideNodeView(), typeof(IViewFor<NodeViewModel>));
             //Locator.CurrentMutable.Register(() => new SideBySideNodeView(), typeof(IViewFor<Bz2TerImportViewModel>));
             
-            Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<Bz2TerImportViewModel>));
+            //Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<Bz2TerImportViewModel>));
 
             base.OnStartup(e);
         }

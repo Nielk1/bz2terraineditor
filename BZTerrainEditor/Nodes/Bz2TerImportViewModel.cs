@@ -23,6 +23,11 @@ namespace BZTerrainEditor.Nodes
         public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer2 { get; } = new() { Name = "Layer 2 Alpha" };
         public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer3 { get; } = new() { Name = "Layer 3 Alpha" };
 
+        static Bz2TerImportViewModel()
+        {
+            Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<Bz2TerImportViewModel>));
+        }
+
         public Bz2TerImportViewModel()
         {
             Name = "Battlezone Combat Commander TER";
