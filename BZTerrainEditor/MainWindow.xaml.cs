@@ -1,8 +1,9 @@
-﻿using DynamicData;
+﻿using BZTerrainEditor.ViewModels;
+using BZTerrainEditor.ViewModels.Nodes;
+using DynamicData;
+using MahApps.Metro.Controls;
 using NodeNetwork.ViewModels;
 using System.Windows;
-using MahApps.Metro.Controls;
-using BZTerrainEditor.ViewModels.Nodes;
 
 namespace BZTerrainEditor
 {
@@ -27,6 +28,7 @@ namespace BZTerrainEditor
             nodeBZTer.Position = new Point(200, 5);
 
 
+            GlobalNodeManager.Instance.Register(nameof(BattlezoneTerNode), typeof(BattlezoneTerNode));
 
 
 

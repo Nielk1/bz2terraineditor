@@ -9,6 +9,7 @@
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:viewModels="clr-namespace:BZTerrainEditor.ViewModels"
+        xmlns:reactiveui="http://reactiveui.net"
         mc:Ignorable="d"
         Title="MainWindow" Height="625" Width="1000" MinHeight="625" MinWidth="1000">
     <DockPanel>
@@ -74,11 +75,14 @@
                                                   Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:MetroTabItem}}, Path=Foreground}" />
                     </mah:MetroTabItem.Header>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding GlobalInputs, Source={x:Static viewModels:GlobalVariableManager.Instance}}">
+                        <ItemsControl ItemsSource="{Binding GlobalNodeTypes, Source={x:Static viewModels:GlobalNodeManager.Instance}}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <!-- Use a DataTemplateSelector or type-specific templates for each editor type -->
-                                    <ContentControl Content="{Binding}" />
+                                    <StackPanel>
+                                        <TextBlock Text="TEST" />
+                                        <mah:MetroHeader Header="{Binding}" />
+                                        <Separator Height="1" Background="Gray" Margin="0,10,0,10" />
+                                    </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -90,7 +94,29 @@
                                                   Width="36" Height="36" Padding="2"
                                                   Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:MetroTabItem}}, Path=Foreground}" />
                     </mah:MetroTabItem.Header>
-                    <xctk:PropertyGrid SelectedObject="{Binding YourObject}"/>
+                    <!--<xctk:PropertyGrid SelectedObject="{Binding YourObject}"/>-->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding GlobalInputs, Source={x:Static viewModels:GlobalVariableManager.Instance}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <mah:MetroHeader Header="{Binding EditorId}" />
+                                        <TextBox Text="Name Placeholder" Margin="0,0,0,10"/>
+                                        <reactiveui:ViewModelViewHost ViewModel="{Binding}" />
+                                        <Separator Height="1" Background="Gray" Margin="0,10,0,10" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </mah:MetroTabItem>
+                <mah:MetroTabItem ToolTip="Actions">
+                    <mah:MetroTabItem.Header>
+                        <iconPacks:PackIconMaterial Kind="PlayBoxMultipleOutline"
+                                                  Width="36" Height="36" Padding="2"
+                                                  Foreground="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:MetroTabItem}}, Path=Foreground}" />
+                    </mah:MetroTabItem.Header>
+
                 </mah:MetroTabItem>
 
             </mah:MetroTabControl>
