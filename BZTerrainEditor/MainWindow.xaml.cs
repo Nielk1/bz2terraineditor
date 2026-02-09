@@ -1,8 +1,8 @@
-﻿using BZTerrainEditor.Nodes;
-using DynamicData;
+﻿using DynamicData;
 using NodeNetwork.ViewModels;
 using System.Windows;
 using MahApps.Metro.Controls;
+using BZTerrainEditor.ViewModels.Nodes;
 
 namespace BZTerrainEditor
 {

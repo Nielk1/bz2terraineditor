@@ -6,12 +6,13 @@ using BZTerrainEditor.Records;
 using Splat;
 using NodeNetwork.Views;
 using ReactiveUI;
+using BZTerrainEditor.ViewModels.Editors;
 
-namespace BZTerrainEditor.Nodes;
+namespace BZTerrainEditor.ViewModels.Nodes;
 
 public class BattlezoneTerNode : NodeViewModel
 {
-    public ValueNodeInputViewModel<string> FilePath { get; } = new() { Name = "File Path" };
+    public ValueNodeInputViewModel<string?> FilePath { get; } = new() { Name = "File Path" };
 
     public ValueNodeOutputViewModel<HeightmapF32> Height { get; } = new() { Name = "Height" };
     //public ValueNodeOutputViewModel<FlagsMap<TerFlags>> NodeFlags { get; } = new() { Name = "Node Flags" };
@@ -32,7 +33,15 @@ public class BattlezoneTerNode : NodeViewModel
     public BattlezoneTerNode()
     {
         Name = "Battlezone TER";
+
+        FilePath.Editor = new FilePathEditorViewModel
+        {
+            //Filter = "All files (*.*)|*.*"
+        };
+        FilePath.Port.IsVisible = true;
+
         Inputs.Add(FilePath);
+
         Outputs.Add(Height);
         //Outputs.Add(NodeFlags);
         Outputs.Add(TextureLayer0);

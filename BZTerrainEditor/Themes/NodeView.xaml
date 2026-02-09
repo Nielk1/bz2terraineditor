@@ -112,7 +112,9 @@
                                     </DockPanel>
                                     <Canvas x:Name="HeaderBottomMargin" Width="auto" Height="3"/>
 
-                                    <ContentPresenter x:Name="LeadingControlPresenter" Style="{TemplateBinding LeadingControlPresenterStyle}"/>
+                                    <ContentPresenter x:Name="LeadingControlPresenter"
+                                                      Content="{Binding LeadingContent}"
+                                                      Style="{TemplateBinding LeadingControlPresenterStyle}"/>
 
                                     <Grid>
                                         <Grid.ColumnDefinitions>
