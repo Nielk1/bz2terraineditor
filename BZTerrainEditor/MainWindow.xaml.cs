@@ -4,6 +4,7 @@ using DynamicData;
 using MahApps.Metro.Controls;
 using NodeNetwork.ViewModels;
 using System.Windows;
+using System.Windows.Input;
 
 namespace BZTerrainEditor
 {
@@ -15,6 +16,7 @@ namespace BZTerrainEditor
         public MainWindow()
         {
             InitializeComponent();
+            this.DataContext = this; // until we get a view model and reorganize stuff
 
             //Create a new viewmodel for the NetworkView
             var network = new NetworkViewModel();
@@ -28,8 +30,9 @@ namespace BZTerrainEditor
             nodeBZTer.Position = new Point(200, 5);
 
 
-            GlobalNodeManager.Instance.Register(nameof(BattlezoneTerNode), typeof(BattlezoneTerNode));
+            GlobalNodeManager.Instance.Register(typeof(BattlezoneTerNode), "BattlezoneTerNode", "TER import from BZ2 or BZCC", () => { return new BattlezoneTerNode(); });
 
+            NodeCreateCommand = new NodeCreateCommand(OnNodeCreateCommand);
 
 
             ////Create the node for the first node, set its name and add it to the network.
@@ -76,6 +79,14 @@ namespace BZTerrainEditor
 
             //Assign the viewmodel to the view.
             networkView.ViewModel = network;
+
+        }
+
+        public ICommand NodeCreateCommand { get; }
+
+        private void OnNodeCreateCommand(Func<NodeViewModel> factory)
+        {
+            // parameter is the item bound to the current iteration
         }
     }
 }
