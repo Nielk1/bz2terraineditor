@@ -1,10 +1,12 @@
 ﻿using BZTerrainEditor.ViewModels;
+using BZTerrainEditor.ViewModels.Editors;
 using BZTerrainEditor.ViewModels.Nodes;
 using DynamicData;
 using MahApps.Metro.Controls;
 using NodeNetwork.ViewModels;
 using System.Windows;
 using System.Windows.Input;
+using System.Xml.Linq;
 
 namespace BZTerrainEditor
 {
@@ -31,6 +33,12 @@ namespace BZTerrainEditor
 
 
             GlobalNodeManager.Instance.Register(typeof(BattlezoneTerNode), "BattlezoneTerNode", "TER import from BZ2 or BZCC", () => { return new BattlezoneTerNode(); });
+            GlobalNodeManager.Instance.Register(typeof(ValueNode<string?, FilePathEditorViewModel>), "Value Node: FilePath", null, () => {
+                var editor = new FilePathEditorViewModel();
+                var node = new ValueNode<string?, FilePathEditorViewModel>(editor);
+                node.Name = "Value Node: FilePath";
+                return node;
+            });
 
             NodeCreateCommand = new NodeCreateCommand(OnNodeCreateCommand);
 
@@ -86,7 +94,19 @@ namespace BZTerrainEditor
 
         private void OnNodeCreateCommand(Func<NodeViewModel> factory)
         {
-            // parameter is the item bound to the current iteration
+            var node = factory();
+            var network = networkView.ViewModel as NetworkViewModel;
+
+            // 1. Get mouse position relative to the networkView
+            var mousePos = Mouse.GetPosition(networkView);
+
+            // 2. Convert to network coordinates
+            //    (mousePos - DragOffset) / Zoom
+            var networkX = (0 - network.DragOffset.X) / network.ZoomFactor;
+            var networkY = (0 - network.DragOffset.Y) / network.ZoomFactor;
+
+            node.Position = new Point(networkX, networkY);
+            network.Nodes.Add(node);
         }
     }
 }

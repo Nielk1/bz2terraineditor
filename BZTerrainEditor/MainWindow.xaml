@@ -81,6 +81,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Button HorizontalContentAlignment="Stretch"
+                                            Margin="4,2"
                                             Command="{Binding DataContext.NodeCreateCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                                             CommandParameter="{Binding Value.Factory}">
                                         <Button.Content>

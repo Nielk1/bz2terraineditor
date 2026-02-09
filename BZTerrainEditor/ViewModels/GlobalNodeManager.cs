@@ -14,17 +14,17 @@ namespace BZTerrainEditor.ViewModels;
 
 public class NodeCreateCommand : ICommand
 {
-    private readonly Action<object> _execute;
-    private readonly Predicate<object> _canExecute;
+    private readonly Action<Func<NodeViewModel>> _execute;
+    private readonly Predicate<Func<NodeViewModel>> _canExecute;
 
-    public NodeCreateCommand(Action<object> execute, Predicate<object> canExecute = null)
+    public NodeCreateCommand(Action<Func<NodeViewModel>> execute, Predicate<Func<NodeViewModel>> canExecute = null)
     {
         _execute = execute;
         _canExecute = canExecute;
     }
 
-    public bool CanExecute(object parameter) => _canExecute == null || _canExecute(parameter);
-    public void Execute(object parameter) => _execute(parameter);
+    public bool CanExecute(object parameter) => _canExecute == null || _canExecute(parameter as Func<NodeViewModel>);
+    public void Execute(object parameter) => _execute((Func<NodeViewModel>)parameter);
     public event EventHandler CanExecuteChanged;
 }
 
