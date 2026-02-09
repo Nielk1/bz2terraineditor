@@ -24,7 +24,7 @@ public partial class FilePathEditorView : UserControl, IViewFor<FilePathEditorVi
 {
     #region ViewModel
     public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel),
-        typeof(FilePathEditorViewModel), typeof(IntegerValueEditorView), new PropertyMetadata(null));
+        typeof(FilePathEditorViewModel), typeof(FilePathEditorView), new PropertyMetadata(null, OnViewModelChanged));
 
     public FilePathEditorViewModel ViewModel
     {
@@ -38,6 +38,12 @@ public partial class FilePathEditorView : UserControl, IViewFor<FilePathEditorVi
         set => ViewModel = (FilePathEditorViewModel)value;
     }
     #endregion
+
+    private static void OnViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var view = (FilePathEditorView)d;
+        view.DataContext = e.NewValue;
+    }
 
     public FilePathEditorView()
     {
