@@ -31,15 +31,6 @@ namespace BZTerrainEditor
             network.Nodes.Add(nodeBZTer);
             nodeBZTer.Position = new Point(200, 5);
 
-
-            GlobalNodeManager.Instance.Register(typeof(BattlezoneTerNode), "BattlezoneTerNode", "TER import from BZ2 or BZCC", () => { return new BattlezoneTerNode(); });
-            GlobalNodeManager.Instance.Register(typeof(ValueNode<string?, FilePathEditorViewModel>), "Value Node: FilePath", null, () => {
-                var editor = new FilePathEditorViewModel();
-                var node = new ValueNode<string?, FilePathEditorViewModel>(editor);
-                node.Name = "Value Node: FilePath";
-                return node;
-            });
-
             NodeCreateCommand = new NodeCreateCommand(OnNodeCreateCommand);
 
 

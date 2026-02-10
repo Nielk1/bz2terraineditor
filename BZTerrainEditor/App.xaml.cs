@@ -1,4 +1,5 @@
-﻿using BZTerrainEditor.Views;
+﻿using BZTerrainEditor.ViewModels;
+using BZTerrainEditor.Views;
 using NodeNetwork;
 using NodeNetwork.ViewModels;
 using NodeNetwork.Views;
@@ -21,8 +22,10 @@ namespace BZTerrainEditor
 
             //Locator.CurrentMutable.Register(() => new SideBySideNodeView(), typeof(IViewFor<NodeViewModel>));
             //Locator.CurrentMutable.Register(() => new SideBySideNodeView(), typeof(IViewFor<Bz2TerImportViewModel>));
-            
+
             //Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<Bz2TerImportViewModel>));
+
+            NodeRegistrationSystem.RegisterAll(GlobalNodeManager.Instance);
 
             base.OnStartup(e);
         }

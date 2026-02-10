@@ -1,5 +1,6 @@
 ﻿using BZTerrainEditor.Records;
 using BZTerrainEditor.ViewModels.Editors;
+using ControlzEx.Standard;
 using DynamicData;
 using NodeNetwork;
 using NodeNetwork.Toolkit.ValueNode;
@@ -27,7 +28,9 @@ public class ValueNode<T, E> : NodeViewModel where E : ValueEditorViewModel<T>
         Name = "Value Node";
 
         ValueIn.Editor = editor;
-        ValueOut.Value = Observable.Return<T>(default);
+        //ValueOut.Value = Observable.Return<T>(default);
+
+        ValueOut.Value = this.WhenAnyValue(vm => vm.ValueIn.Value);
 
         Inputs.Add(ValueIn);
         Outputs.Add(ValueOut);

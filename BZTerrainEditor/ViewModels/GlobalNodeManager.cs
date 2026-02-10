@@ -28,7 +28,7 @@ public class NodeCreateCommand : ICommand
     public event EventHandler CanExecuteChanged;
 }
 
-public record struct GlobalNodeType(string Name, string Description, Func<NodeViewModel> Factory);
+public record struct GlobalNodeType(string Name, string? Description, Func<NodeViewModel> Factory);
 
 public class GlobalNodeManager : INotifyPropertyChanged
 {
@@ -38,7 +38,7 @@ public class GlobalNodeManager : INotifyPropertyChanged
     //public ObservableCollection<GlobalNodeType> GlobalNodeTypes { get; } = new();
     public ObservableDictionary<Type, GlobalNodeType> GlobalNodeTypes { get; } = new();
 
-    public void Register(Type type, string name, string description, Func<NodeViewModel> factory)
+    public void Register(Type type, string name, string? description, Func<NodeViewModel> factory)
     {
         var globalNodeType = new GlobalNodeType(name, description, factory);
         if (!GlobalNodeTypes.ContainsKey(type))

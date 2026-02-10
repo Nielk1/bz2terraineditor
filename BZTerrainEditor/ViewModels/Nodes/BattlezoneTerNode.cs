@@ -12,9 +12,15 @@ namespace BZTerrainEditor.ViewModels.Nodes;
 
 public class BattlezoneTerNode : NodeViewModel
 {
+    [NodeRegistration]
+    public static void RegisterNode(GlobalNodeManager manager)
+    {
+        manager.Register(typeof(BattlezoneTerNode), "BattlezoneTerNode", "TER import from BZ2 or BZCC", () => { return new BattlezoneTerNode(); });
+    }
+
     public ValueNodeInputViewModel<string?> FilePath { get; } = new() { Name = "File Path" };
 
-    public ValueNodeOutputViewModel<HeightmapF32> Height { get; } = new() { Name = "Height" };
+    public ValueNodeOutputViewModel<float[,]> Height { get; } = new() { Name = "Height" };
     //public ValueNodeOutputViewModel<FlagsMap<TerFlags>> NodeFlags { get; } = new() { Name = "Node Flags" };
     public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer0 { get; } = new() { Name = "Layer 0 Texture Index" };
     public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer1 { get; } = new() { Name = "Layer 1 Texture Index" };
