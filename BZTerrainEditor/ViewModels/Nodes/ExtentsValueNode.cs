@@ -62,8 +62,13 @@ public class ExtentsValueNode<I,O> : NodeViewModel where O : IComparable
         _maxOutput.Name = "Max";
         Outputs.Add(_maxOutput);
 
-        _minOutput.Value = _input.WhenAnyValue(vm => vm.Value).Select(value => FindMinMax(value).min);
-        _maxOutput.Value = _input.WhenAnyValue(vm => vm.Value).Select(value => FindMinMax(value).max);
+        var minMaxObservable = _input
+            .WhenAnyValue(vm => vm.Value)
+            .Where(value => value != null)
+            .Select(value => FindMinMax(value));
+
+        _minOutput.Value = minMaxObservable.Select(tuple => tuple.min);
+        _maxOutput.Value = minMaxObservable.Select(tuple => tuple.max);
     }
 
     private static (O min, O max) FindMinMax(I collection)

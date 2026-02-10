@@ -1,12 +1,14 @@
-﻿using NodeNetwork.Toolkit.ValueNode;
-using NodeNetwork.ViewModels;
-using NodeNetwork;
+﻿using BZTerrainEditor.Records;
+using BZTerrainEditor.ViewModels.Editors;
 using DynamicData;
-using BZTerrainEditor.Records;
-using Splat;
+using NodeNetwork;
+using NodeNetwork.Toolkit.ValueNode;
+using NodeNetwork.ViewModels;
 using NodeNetwork.Views;
 using ReactiveUI;
-using BZTerrainEditor.ViewModels.Editors;
+using Splat;
+using System.Reactive.Linq;
+using System.Windows.Media.Media3D;
 
 namespace BZTerrainEditor.ViewModels.Nodes;
 
@@ -45,6 +47,8 @@ public class BattlezoneTerNode : NodeViewModel
             //Filter = "All files (*.*)|*.*"
         };
         FilePath.Port.IsVisible = true;
+
+        Height.Value = Observable.Return<float[,]>(default); // temporary
 
         Inputs.Add(FilePath);
 
