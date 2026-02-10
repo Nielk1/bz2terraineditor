@@ -4,7 +4,9 @@ using Microsoft.Win32;
 using NodeNetwork.Toolkit.ValueNode;
 using ReactiveUI;
 using System;
+using System.IO;
 using System.Reactive;
+using System.Reactive.Linq;
 
 namespace BZTerrainEditor.ViewModels.Editors;
 
@@ -42,6 +44,9 @@ public class FilePathEditorViewModel : ValueEditorViewModel<string?>
 
     public ReactiveCommand<Unit, Unit> SelectFileCommand { get; }
 
+    private readonly ObservableAsPropertyHelper<string> _filename;
+    public string Filename => _filename.Value;
+
     public void SetValueFromString(string value)
     {
         Value = value;
@@ -56,6 +61,11 @@ public class FilePathEditorViewModel : ValueEditorViewModel<string?>
     {
         Value = null;
         SelectFileCommand = ReactiveCommand.Create(SelectFile);
+
+        // Calculate Preview reactively
+        _filename = this.WhenAnyValue(vm => vm.Value)
+            .Select(v => string.IsNullOrEmpty(v) ? "No file" : Path.GetFileName(v))
+            .ToProperty(this, vm => vm.Filename);
     }
 
     private void SelectFile()

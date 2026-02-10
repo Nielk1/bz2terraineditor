@@ -8,7 +8,10 @@
              d:DesignHeight="80" d:DesignWidth="120">
     <StackPanel>
         <CheckBox Content="Global Variable" IsChecked="{Binding IsGlobalVariable, Mode=TwoWay}" />
-        <TextBlock Text="{Binding Value}" TextWrapping="Wrap" />
+        <TextBox IsEnabled="False" Text="{Binding Value}" TextWrapping="Wrap"
+                 
+                 MaxWidth="300"/>
+        <TextBlock Text="{Binding Filename}" TextWrapping="Wrap" />
         <Button Content="Select File" Command="{Binding SelectFileCommand}" />
     </StackPanel>
 </UserControl>
