@@ -20,4 +20,8 @@
     <Folder Include="Controls\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Deps\BZMapTools\BZMapTools\BZMapTools.csproj" />
+  </ItemGroup>
+
 </Project>

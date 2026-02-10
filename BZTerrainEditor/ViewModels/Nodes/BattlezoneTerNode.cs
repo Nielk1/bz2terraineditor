@@ -1,5 +1,7 @@
-﻿using BZTerrainEditor.Records;
+﻿using Bz2TerFile;
+using BZTerrainEditor.Records;
 using BZTerrainEditor.ViewModels.Editors;
+using ControlzEx.Standard;
 using DynamicData;
 using NodeNetwork;
 using NodeNetwork.Toolkit.ValueNode;
@@ -62,5 +64,21 @@ public class BattlezoneTerNode : NodeViewModel
         Outputs.Add(AlphaLayer1);
         Outputs.Add(AlphaLayer2);
         Outputs.Add(AlphaLayer3);
+
+
+
+        var minMaxObservable = FilePath
+            .WhenAnyValue(vm => vm.Value)
+            .Where(value => value != null)
+            .Select(value => TerFileBase.Read(value));
+
+        Height.Value = minMaxObservable.Select(ter =>
+        {
+            //if (ter is BZ2TerFile bz2ter)
+            //    return bz2ter.HeightMap;
+            if (ter is BZCCTerFile bzccter)
+                return bzccter.HeightMap;
+            return null;
+        });
     }
 }

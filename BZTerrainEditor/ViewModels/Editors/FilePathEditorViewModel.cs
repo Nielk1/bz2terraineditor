@@ -1,12 +1,10 @@
 ﻿using BZTerrainEditor.ViewModels.Nodes;
 using BZTerrainEditor.Views;
+using Microsoft.Win32;
 using NodeNetwork.Toolkit.ValueNode;
 using ReactiveUI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reactive;
 
 namespace BZTerrainEditor.ViewModels.Editors;
 
@@ -40,11 +38,14 @@ public class FilePathEditorViewModel : ValueEditorViewModel<string?>
         }
     }
 
+    public bool IsSaveMode { get; set; } = false; // false for open, true for save
+
+    public ReactiveCommand<Unit, Unit> SelectFileCommand { get; }
+
     public void SetValueFromString(string value)
     {
         Value = value;
     }
-
 
     static FilePathEditorViewModel()
     {
@@ -54,5 +55,15 @@ public class FilePathEditorViewModel : ValueEditorViewModel<string?>
     public FilePathEditorViewModel()
     {
         Value = null;
+        SelectFileCommand = ReactiveCommand.Create(SelectFile);
+    }
+
+    private void SelectFile()
+    {
+        FileDialog dialog = IsSaveMode ? new SaveFileDialog() : new OpenFileDialog();
+        if (dialog.ShowDialog() == true)
+        {
+            Value = dialog.FileName;
+        }
     }
 }
