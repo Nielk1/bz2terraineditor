@@ -10,8 +10,16 @@
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:viewModels="clr-namespace:BZTerrainEditor.ViewModels"
         xmlns:reactiveui="http://reactiveui.net"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d"
         Title="MainWindow" Height="625" Width="1000" MinHeight="625" MinWidth="1000">
+    <mah:MetroWindow.Resources>
+        <CollectionViewSource x:Key="SortedNodeTypes" Source="{Binding GlobalNodeTypes, Source={x:Static viewModels:GlobalNodeManager.Instance}}">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Value.Name" />
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+    </mah:MetroWindow.Resources>
     <DockPanel>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -77,7 +85,7 @@
                         </mah:Badged>
                     </mah:MetroTabItem.Header>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ItemsControl ItemsSource="{Binding GlobalNodeTypes, Source={x:Static viewModels:GlobalNodeManager.Instance}}">
+                        <ItemsControl ItemsSource="{Binding Source={StaticResource SortedNodeTypes}}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Button HorizontalContentAlignment="Stretch"
