@@ -84,44 +84,32 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
             Cursor = Cursors.Hand
         };
         previewImage.SetBinding(Image.SourceProperty, new Binding("PreviewImage"));
-        
-        // Drag detection variables
-        Point? _mouseDownPoint = null;
-        bool _isDragging = false;
-        
-        previewImage.MouseLeftButtonDown += (s, e) =>
-        {
-            _mouseDownPoint = e.GetPosition(previewImage);
-            _isDragging = false;
-            previewImage.CaptureMouse(); // Capture to ensure we get move/up events
-            e.Handled = true;
-        };
-        
-        previewImage.MouseMove += (s, e) =>
-        {
-            if (_mouseDownPoint.HasValue && !_isDragging)
-            {
-                var currentPoint = e.GetPosition(previewImage);
-                var delta = currentPoint - _mouseDownPoint.Value;
-                if (Math.Abs(delta.X) > 5 || Math.Abs(delta.Y) > 5) // Threshold for drag
-                {
-                    _isDragging = true;
-                }
-            }
-        };
-        
-        previewImage.MouseLeftButtonUp += (s, e) =>
-        {
-            if (!_isDragging && _mouseDownPoint.HasValue)
-            {
-                OpenFullPreview(); // Only open if not dragging
-            }
-            _mouseDownPoint = null;
-            _isDragging = false;
-            previewImage.ReleaseMouseCapture();
-            e.Handled = true;
-        };
-        
+
+        // Click vs. drag detection variables
+        //Point? _mouseDownPoint = null;
+        //
+        //previewImage.PreviewMouseLeftButtonDown += (s, e) =>
+        //{
+        //    _mouseDownPoint = e.GetPosition(previewImage);
+        //};
+        //
+        //previewImage.PreviewMouseLeftButtonUp += (s, e) =>
+        //{
+        //    if (_mouseDownPoint.HasValue)
+        //    {
+        //        var currentPoint = e.GetPosition(previewImage);
+        //        var delta = currentPoint - _mouseDownPoint.Value;
+        //        if (Math.Abs(delta.X) <= 5 && Math.Abs(delta.Y) <= 5) // Threshold for click
+        //        {
+        //            OpenFullPreview(); // Only open if not dragged
+        //        }
+        //        // Else, let the parent handle dragging
+        //    }
+        //    _mouseDownPoint = null;
+        //};
+
+        previewImage.PreviewMouseLeftButtonDown += (s, e) => OpenFullPreview();
+
         LeadingContent = previewImage;
     }
 
