@@ -19,7 +19,7 @@ public class BattlezoneTerNode : NodeViewModel
     [NodeRegistration]
     public static void RegisterNode(GlobalNodeManager manager)
     {
-        manager.Register(typeof(BattlezoneTerNode), "BattlezoneTerNode", "TER import from BZ2 or BZCC", () => { return new BattlezoneTerNode(); });
+        manager.Register(typeof(BattlezoneTerNode), "Battlezone TER Import", "TER import from BZ2 or BZCC", () => { return new BattlezoneTerNode(); });
     }
 
     public ValueNodeInputViewModel<string?> FilePath { get; } = new() { Name = "File Path" };
@@ -43,7 +43,7 @@ public class BattlezoneTerNode : NodeViewModel
 
     public BattlezoneTerNode()
     {
-        Name = "Battlezone TER";
+        Name = "Battlezone TER Import";
 
         FilePath.Editor = new FilePathEditorViewModel
         {
