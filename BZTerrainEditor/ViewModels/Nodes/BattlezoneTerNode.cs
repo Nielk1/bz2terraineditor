@@ -96,5 +96,17 @@ public class BattlezoneTerNode : NodeViewModel
             HeightFloat.Name = isActive ? "Height (Float)" : "[Inactive] Height (Float)";
         });
 
+        // Reset names if no file is loaded
+        FilePath.WhenAnyValue(vm => vm.Value)
+            .Select(value => string.IsNullOrEmpty(value))
+            .Subscribe(isEmpty =>
+            {
+                if (isEmpty)
+                {
+                    Height.Name = "Height (Int16)";
+                    HeightFloat.Name = "Height (Float)";
+                }
+            });
+
     }
 }

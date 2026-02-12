@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows;
@@ -18,16 +19,31 @@ using Splat;
 
 namespace BZTerrainEditor.ViewModels.Nodes;
 
-public class PreviewNode : NodeViewModel
+public static class PreviewNodeResistration
 {
-    [NodeRegistration]
-    public static void RegisterNode(GlobalNodeManager manager)
+    [NodeRegistration(IsTypeBased = true)]
+    public static void RegisterNode(GlobalNodeManager manager, Type t)
     {
-        manager.Register(typeof(PreviewNode), "Terrain Preview", "Preview greyscale image from height map.", () => new PreviewNode());
+        // Check if T is an array of INumber<T> elements
+        Type elementType = t;
+        bool inArray = false;
+        while (elementType.IsArray)
+        {
+            elementType = elementType.GetElementType()!;
+            inArray = true;
+        }
+        if (inArray && typeof(INumber<>).MakeGenericType(elementType).IsAssignableFrom(elementType))
+        {
+            Type nodeType = typeof(PreviewNode<>).MakeGenericType(elementType);
+            manager.Register(nodeType, $"Auto-Scaled Greyscale Preview {t.Name}", $"Preview greyscale image from {t.Name}.", () => (NodeViewModel)Activator.CreateInstance(nodeType));
+        }
     }
+}
 
+public class PreviewNode<T> : NodeViewModel where T : INumber<T>
+{
     public UIElement? LeadingContent { get; set; }
-    public ValueNodeInputViewModel<float[,]> HeightMap { get; } = new() { Name = "Height Map" };
+    public ValueNodeInputViewModel<T[,]> HeightMap { get; } = new() { Name = $"{typeof(T).Name}[,]" };
 
     private BitmapSource _previewImage;
     public BitmapSource PreviewImage
@@ -40,12 +56,12 @@ public class PreviewNode : NodeViewModel
 
     static PreviewNode()
     {
-        Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<PreviewNode>));
+        Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<PreviewNode<T>>));
     }
 
     public PreviewNode()
     {
-        Name = "Terrain Preview";
+        Name = "Auto-Scaled Greyscale Preview";
 
         Inputs.Add(HeightMap);
 
@@ -78,12 +94,12 @@ public class PreviewNode : NodeViewModel
         window.ShowDialog();
     }
 
-    private static (float min, float max) FindMinMax(float[,] array)
+    private static (T min, T max) FindMinMax(T[,] array)
     {
-        if (array == null || array.Length == 0) return (0f, 0f);
-        float min = float.MaxValue;
-        float max = float.MinValue;
-        foreach (float val in array)
+        if (array == null || array.Length == 0) return (default, default);
+        T min = array[0, 0];
+        T max = array[0, 0];
+        foreach (T val in array)
         {
             if (val < min) min = val;
             if (val > max) max = val;
@@ -91,21 +107,23 @@ public class PreviewNode : NodeViewModel
         return (min, max);
     }
 
-    private static BitmapSource CreatePreviewImage(float[,] array, float min, float max)
+    private static BitmapSource CreatePreviewImage(T[,] array, T min, T max)
     {
         if (array == null || array.Length == 0) return null;
         int height = array.GetLength(0);
         int width = array.GetLength(1);
         var bitmap = new WriteableBitmap(width, height, 96, 96, System.Windows.Media.PixelFormats.Gray8, null);
         var pixels = new byte[width * height];
-        float range = max - min;
-        if (range == 0) range = 1; // Avoid division by zero
+        double dmin = Convert.ToDouble(min);
+        double dmax = Convert.ToDouble(max);
+        double drange = dmax - dmin;
+        if (drange == 0) drange = 1; // Avoid division by zero
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
-                float val = array[y, x];
-                byte grey = (byte)Math.Clamp((val - min) / range * 255, 0, 255);
+                double dval = Convert.ToDouble(array[y, x]);
+                byte grey = (byte)Math.Clamp((dval - dmin) / drange * 255, 0, 255);
                 pixels[y * width + x] = grey;
             }
         }
