@@ -54,7 +54,7 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
 
     private Views.PreviewWindow? _previewWindow; // Added to track the open window for updates and reuse
 
-    public ReactiveCommand<Unit, Unit> OpenFullPreviewCommand { get; }
+    //public ReactiveCommand<Unit, Unit> OpenFullPreviewCommand { get; }
 
     static PreviewNode()
     {
@@ -73,7 +73,7 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
 
         imageObs.ObserveOn(RxApp.MainThreadScheduler).Subscribe(img => PreviewImage = img);
 
-        OpenFullPreviewCommand = ReactiveCommand.Create(OpenFullPreview);
+        //OpenFullPreviewCommand = ReactiveCommand.Create(OpenFullPreview);
 
         // Set up the preview image in LeadingContent with click vs. drag detection
         var previewImage = new Image
@@ -84,29 +84,6 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
             Cursor = Cursors.Hand
         };
         previewImage.SetBinding(Image.SourceProperty, new Binding("PreviewImage"));
-
-        // Click vs. drag detection variables
-        //Point? _mouseDownPoint = null;
-        //
-        //previewImage.PreviewMouseLeftButtonDown += (s, e) =>
-        //{
-        //    _mouseDownPoint = e.GetPosition(previewImage);
-        //};
-        //
-        //previewImage.PreviewMouseLeftButtonUp += (s, e) =>
-        //{
-        //    if (_mouseDownPoint.HasValue)
-        //    {
-        //        var currentPoint = e.GetPosition(previewImage);
-        //        var delta = currentPoint - _mouseDownPoint.Value;
-        //        if (Math.Abs(delta.X) <= 5 && Math.Abs(delta.Y) <= 5) // Threshold for click
-        //        {
-        //            OpenFullPreview(); // Only open if not dragged
-        //        }
-        //        // Else, let the parent handle dragging
-        //    }
-        //    _mouseDownPoint = null;
-        //};
 
         previewImage.PreviewMouseLeftButtonDown += (s, e) => OpenFullPreview();
 
