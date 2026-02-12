@@ -40,7 +40,7 @@ public static class PreviewNodeResistration
     }
 }
 
-public class PreviewNode<T> : NodeViewModel where T : INumber<T>
+public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
 {
     public UIElement? LeadingContent { get; set; }
     public ValueNodeInputViewModel<T[,]> HeightMap { get; } = new() { Name = $"{typeof(T).Name}[,]" };
@@ -51,6 +51,8 @@ public class PreviewNode<T> : NodeViewModel where T : INumber<T>
         get => _previewImage;
         private set => this.RaiseAndSetIfChanged(ref _previewImage, value);
     }
+
+    private Views.PreviewWindow? _previewWindow; // Added to track the open window for updates and reuse
 
     public ReactiveCommand<Unit, Unit> OpenFullPreviewCommand { get; }
 
@@ -73,7 +75,7 @@ public class PreviewNode<T> : NodeViewModel where T : INumber<T>
 
         OpenFullPreviewCommand = ReactiveCommand.Create(OpenFullPreview);
 
-        // Set up the preview image in LeadingContent
+        // Set up the preview image in LeadingContent with click vs. drag detection
         var previewImage = new Image
         {
             Stretch = Stretch.Uniform,
@@ -82,16 +84,61 @@ public class PreviewNode<T> : NodeViewModel where T : INumber<T>
             Cursor = Cursors.Hand
         };
         previewImage.SetBinding(Image.SourceProperty, new Binding("PreviewImage"));
-        previewImage.MouseLeftButtonDown += (s, e) => OpenFullPreview();
+        
+        // Drag detection variables
+        Point? _mouseDownPoint = null;
+        bool _isDragging = false;
+        
+        previewImage.MouseLeftButtonDown += (s, e) =>
+        {
+            _mouseDownPoint = e.GetPosition(previewImage);
+            _isDragging = false;
+            previewImage.CaptureMouse(); // Capture to ensure we get move/up events
+            e.Handled = true;
+        };
+        
+        previewImage.MouseMove += (s, e) =>
+        {
+            if (_mouseDownPoint.HasValue && !_isDragging)
+            {
+                var currentPoint = e.GetPosition(previewImage);
+                var delta = currentPoint - _mouseDownPoint.Value;
+                if (Math.Abs(delta.X) > 5 || Math.Abs(delta.Y) > 5) // Threshold for drag
+                {
+                    _isDragging = true;
+                }
+            }
+        };
+        
+        previewImage.MouseLeftButtonUp += (s, e) =>
+        {
+            if (!_isDragging && _mouseDownPoint.HasValue)
+            {
+                OpenFullPreview(); // Only open if not dragging
+            }
+            _mouseDownPoint = null;
+            _isDragging = false;
+            previewImage.ReleaseMouseCapture();
+            e.Handled = true;
+        };
+        
         LeadingContent = previewImage;
     }
 
     private void OpenFullPreview()
     {
         if (PreviewImage == null) return;
-        var window = new Views.PreviewWindow(PreviewImage);
-        window.Owner = Application.Current.MainWindow;
-        window.ShowDialog();
+        
+        if (_previewWindow == null || !_previewWindow.IsVisible)
+        {
+            _previewWindow = new Views.PreviewWindow(this); // Pass the node for binding
+            _previewWindow.Owner = Application.Current.MainWindow;
+            _previewWindow.Show(); // Non-modal
+        }
+        else
+        {
+            _previewWindow.Activate(); // Bring to front if already open
+        }
     }
 
     private static (T min, T max) FindMinMax(T[,] array)

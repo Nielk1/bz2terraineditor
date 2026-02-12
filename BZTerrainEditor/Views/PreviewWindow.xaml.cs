@@ -1,13 +1,15 @@
+using System.Numerics;
 using System.Windows;
 using System.Windows.Media.Imaging;
-   
+using BZTerrainEditor.ViewModels.Nodes;
+
 namespace BZTerrainEditor.Views;
-   
+
 public partial class PreviewWindow : Window
 {
-    public PreviewWindow(BitmapSource image)
+    public PreviewWindow(IPreviewNode node)
     {
         InitializeComponent();
-        DataContext = new { Image = image };
+        DataContext = node; // Bind to the interface for PreviewImage updates
     }
 }

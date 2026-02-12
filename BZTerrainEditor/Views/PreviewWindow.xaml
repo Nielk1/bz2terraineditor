@@ -9,6 +9,6 @@
            WindowStartupLocation="CenterOwner"
            ResizeMode="CanResize">
     <Grid>
-        <Image Source="{Binding Image}" Stretch="Uniform" />
+        <Image Source="{Binding PreviewImage}" Stretch="Uniform" />
     </Grid>
 </Window>
