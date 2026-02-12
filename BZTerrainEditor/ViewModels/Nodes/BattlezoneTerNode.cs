@@ -9,12 +9,14 @@ using NodeNetwork.ViewModels;
 using NodeNetwork.Views;
 using ReactiveUI;
 using Splat;
+using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Windows.Media.Media3D;
 
 namespace BZTerrainEditor.ViewModels.Nodes;
 
-public class BattlezoneTerNode : NodeViewModel
+public class BattlezoneTerNode : NodeViewModel, IDisposable
 {
     [NodeRegistration]
     public static void RegisterNode(GlobalNodeManager manager)
@@ -25,7 +27,7 @@ public class BattlezoneTerNode : NodeViewModel
     public ValueNodeInputViewModel<string?> FilePath { get; } = new() { Name = "File Path" };
 
     public ValueNodeOutputViewModel<Int16[,]?> Height { get; } = new() { Name = "Height (Int16)" };
-    public ValueNodeOutputViewModel<float[,]?> HeightFloat { get; } = new() { Name = "Height (Float)" };
+    public ValueNodeOutputViewModel<float[,]?> HeightFloat { get; } = new() { Name = "Height (Single)" };
     //public ValueNodeOutputViewModel<FlagsMap<TerFlags>> NodeFlags { get; } = new() { Name = "Node Flags" };
     public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer0 { get; } = new() { Name = "Layer 0 Texture Index" };
     public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer1 { get; } = new() { Name = "Layer 1 Texture Index" };
@@ -35,6 +37,9 @@ public class BattlezoneTerNode : NodeViewModel
     public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer1 { get; } = new() { Name = "Layer 1 Alpha" };
     public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer2 { get; } = new() { Name = "Layer 2 Alpha" };
     public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer3 { get; } = new() { Name = "Layer 3 Alpha" };
+
+
+    private readonly CompositeDisposable _disposables = new();
 
     static BattlezoneTerNode()
     {
@@ -68,45 +73,52 @@ public class BattlezoneTerNode : NodeViewModel
         Outputs.Add(AlphaLayer2);
         Outputs.Add(AlphaLayer3);
 
-        var terObservable = FilePath
-            .WhenAnyValue(vm => vm.Value)
+        var filePathObservable = FilePath.WhenAnyValue(vm => vm.Value);
+
+        var terObservable = filePathObservable
             .Where(value => value != null)
             .Select(value => TerFileBase.Read(value));
 
-        Height.Value = terObservable.Select(ter =>
-        {
-            if (ter is BZ2TerFile bz2ter)
-                return bz2ter.HeightMap;
-            return null;
-        });
-        HeightFloat.Value = terObservable.Select(ter =>
-        {
-            if (ter is BZCCTerFile bzccter)
-                return bzccter.HeightMap;
-            return null;
-        });
+        Height.Value = terObservable
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Select(ter => ter is BZ2TerFile bz2ter ? bz2ter.HeightMap : null);
+
+        HeightFloat.Value = terObservable
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Select(ter => ter is BZCCTerFile bzccter ? bzccter.HeightMap : null);
 
         // Keep outputs visible but update names to indicate active/inactive status
-        terObservable.Select(ter => ter is BZ2TerFile).Subscribe(isActive =>
-        {
-            Height.Name = isActive ? "Height (Int16)" : "[Inactive] Height (Int16)";
-        });
-        terObservable.Select(ter => ter is BZCCTerFile).Subscribe(isActive =>
-        {
-            HeightFloat.Name = isActive ? "Height (Float)" : "[Inactive] Height (Float)";
-        });
+        terObservable.Select(ter => ter is BZ2TerFile)
+            .Subscribe(isActive => Height.Name = isActive ? "Height (Int16)" : "[Inactive] Height (Int16)")
+            .DisposeWith(_disposables);
+        terObservable.Select(ter => ter is BZCCTerFile)
+            .Subscribe(isActive => HeightFloat.Name = isActive ? "Height (Single)" : "[Inactive] Height (Single)")
+            .DisposeWith(_disposables);
 
         // Reset names if no file is loaded
-        FilePath.WhenAnyValue(vm => vm.Value)
-            .Select(value => string.IsNullOrEmpty(value))
+        filePathObservable
+            .Select(value => string.IsNullOrWhiteSpace(value))
             .Subscribe(isEmpty =>
             {
                 if (isEmpty)
                 {
                     Height.Name = "Height (Int16)";
-                    HeightFloat.Name = "Height (Float)";
+                    HeightFloat.Name = "Height (Single)";
                 }
-            });
+            }).DisposeWith(_disposables);
+    }
 
+    void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _disposables.Dispose();
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }
