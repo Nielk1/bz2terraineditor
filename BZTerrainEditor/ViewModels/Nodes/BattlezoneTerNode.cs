@@ -24,7 +24,8 @@ public class BattlezoneTerNode : NodeViewModel
 
     public ValueNodeInputViewModel<string?> FilePath { get; } = new() { Name = "File Path" };
 
-    public ValueNodeOutputViewModel<float[,]> Height { get; } = new() { Name = "Height" };
+    public ValueNodeOutputViewModel<Int16[,]?> Height { get; } = new() { Name = "Height (Int16)" };
+    public ValueNodeOutputViewModel<float[,]?> HeightFloat { get; } = new() { Name = "Height (Float)" };
     //public ValueNodeOutputViewModel<FlagsMap<TerFlags>> NodeFlags { get; } = new() { Name = "Node Flags" };
     public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer0 { get; } = new() { Name = "Layer 0 Texture Index" };
     public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer1 { get; } = new() { Name = "Layer 1 Texture Index" };
@@ -50,11 +51,13 @@ public class BattlezoneTerNode : NodeViewModel
         };
         FilePath.Port.IsVisible = true;
 
-        Height.Value = Observable.Return<float[,]>(default); // temporary
+        //Height.Value = Observable.Return<Int16[,]>(null); // temporary
+        //HeightFloat.Value = Observable.Return<float[,]>(null); // temporary
 
         Inputs.Add(FilePath);
 
         Outputs.Add(Height);
+        Outputs.Add(HeightFloat);
         //Outputs.Add(NodeFlags);
         Outputs.Add(TextureLayer0);
         Outputs.Add(TextureLayer1);
@@ -65,20 +68,33 @@ public class BattlezoneTerNode : NodeViewModel
         Outputs.Add(AlphaLayer2);
         Outputs.Add(AlphaLayer3);
 
-
-
-        var minMaxObservable = FilePath
+        var terObservable = FilePath
             .WhenAnyValue(vm => vm.Value)
             .Where(value => value != null)
             .Select(value => TerFileBase.Read(value));
 
-        Height.Value = minMaxObservable.Select(ter =>
+        Height.Value = terObservable.Select(ter =>
         {
-            //if (ter is BZ2TerFile bz2ter)
-            //    return bz2ter.HeightMap;
+            if (ter is BZ2TerFile bz2ter)
+                return bz2ter.HeightMap;
+            return null;
+        });
+        HeightFloat.Value = terObservable.Select(ter =>
+        {
             if (ter is BZCCTerFile bzccter)
                 return bzccter.HeightMap;
             return null;
         });
+
+        // Keep outputs visible but update names to indicate active/inactive status
+        terObservable.Select(ter => ter is BZ2TerFile).Subscribe(isActive =>
+        {
+            Height.Name = isActive ? "Height (Int16)" : "[Inactive] Height (Int16)";
+        });
+        terObservable.Select(ter => ter is BZCCTerFile).Subscribe(isActive =>
+        {
+            HeightFloat.Name = isActive ? "Height (Float)" : "[Inactive] Height (Float)";
+        });
+
     }
 }
