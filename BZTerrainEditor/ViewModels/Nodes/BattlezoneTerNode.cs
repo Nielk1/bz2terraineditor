@@ -9,9 +9,13 @@ using NodeNetwork.ViewModels;
 using NodeNetwork.Views;
 using ReactiveUI;
 using Splat;
+using System;
+using System.Diagnostics;
+using System.IO;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Windows.Media.Media3D;
 
 namespace BZTerrainEditor.ViewModels.Nodes;
@@ -38,8 +42,9 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
     public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer2 { get; } = new() { Name = "Layer 2 Alpha" };
     public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer3 { get; } = new() { Name = "Layer 3 Alpha" };
 
-
     private readonly CompositeDisposable _disposables = new();
+    private FileSystemWatcher? _watcher;
+    private readonly Subject<Unit> _fileChanged = new();
 
     static BattlezoneTerNode()
     {
@@ -75,23 +80,60 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
 
         var filePathObservable = FilePath.WhenAnyValue(vm => vm.Value);
 
-        var terObservable = filePathObservable
+        // Set up file watcher when file path changes
+        filePathObservable.Subscribe(path =>
+        {
+            if (_watcher != null)
+            {
+                _watcher.Dispose();
+                _watcher = null;
+            }
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+            {
+                string directory = Path.GetDirectoryName(path);
+                string fileName = Path.GetFileName(path);
+                _watcher = new FileSystemWatcher(directory, fileName);
+                _watcher.Changed += (s, e) => _fileChanged.OnNext(Unit.Default);
+                _watcher.EnableRaisingEvents = true;
+            }
+        }).DisposeWith(_disposables);
+
+        // Combine file path changes with file change events
+        var combinedObservable = filePathObservable.Merge(_fileChanged.Select(_ => FilePath.Value));
+
+        var terObservable = combinedObservable
             .Where(value => value != null)
-            .Select(value => TerFileBase.Read(value));
+            .Select(value => Observable.Start(() =>
+            {
+                // All heavy work (file I/O, parsing, array creation) happens here
+                try
+                {
+                    var lastWrite = File.GetLastWriteTime(value);
+                    var ter = TerFileBase.Read(value); // This is the heavy part
+                    return (path: value, lastWrite, ter);
+                }
+                catch
+                {
+                    return (path: value, lastWrite: DateTime.MinValue, ter: null as TerFileBase);
+                }
+            }, RxApp.TaskpoolScheduler))
+            .Switch()
+            .DistinctUntilChanged(tuple => (tuple.path, tuple.lastWrite))
+            .ObserveOn(RxApp.MainThreadScheduler) // Only UI update after this
+            .Replay(1)
+            .RefCount();
 
         Height.Value = terObservable
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Select(ter => ter is BZ2TerFile bz2ter ? bz2ter.HeightMap : null);
+            .Select(tuple => tuple.ter is BZ2TerFile bz2ter ? bz2ter.HeightMap : null);
 
         HeightFloat.Value = terObservable
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Select(ter => ter is BZCCTerFile bzccter ? bzccter.HeightMap : null);
+            .Select(tuple => tuple.ter is BZCCTerFile bzccter ? bzccter.HeightMap : null);
 
         // Keep outputs visible but update names to indicate active/inactive status
-        terObservable.Select(ter => ter is BZ2TerFile)
+        terObservable.Select(tuple => tuple.ter is BZ2TerFile)
             .Subscribe(isActive => Height.Name = isActive ? "Height (Int16)" : "[Inactive] Height (Int16)")
             .DisposeWith(_disposables);
-        terObservable.Select(ter => ter is BZCCTerFile)
+        terObservable.Select(tuple => tuple.ter is BZCCTerFile)
             .Subscribe(isActive => HeightFloat.Name = isActive ? "Height (Single)" : "[Inactive] Height (Single)")
             .DisposeWith(_disposables);
 
@@ -112,6 +154,7 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
     {
         if (disposing)
         {
+            _watcher?.Dispose();
             _disposables.Dispose();
         }
     }

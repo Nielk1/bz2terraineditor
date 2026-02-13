@@ -54,8 +54,6 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
 
     private Views.PreviewWindow? _previewWindow; // Added to track the open window for updates and reuse
 
-    //public ReactiveCommand<Unit, Unit> OpenFullPreviewCommand { get; }
-
     static PreviewNode()
     {
         Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<PreviewNode<T>>));
@@ -67,15 +65,13 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
 
         Inputs.Add(HeightMap);
 
-        var heightMapObs = HeightMap.WhenAnyValue(vm => vm.Value).Where(v => v != null);
-        var minMaxObs = heightMapObs.Select(FindMinMax);
-        var imageObs = heightMapObs.CombineLatest(minMaxObs, (array, minMax) => CreatePreviewImage(array, minMax.min, minMax.max));
+        var heightMapObs = HeightMap.WhenAnyValue(vm => vm.Value);
+
+        var minMaxObs = heightMapObs.Where(v => v != null).Select(FindMinMax);
+        var imageObs = heightMapObs.CombineLatest(minMaxObs, (array, minMax) => array != null ? CreatePreviewImage(array, minMax.min, minMax.max) : null);
 
         imageObs.ObserveOn(RxApp.MainThreadScheduler).Subscribe(img => PreviewImage = img);
 
-        //OpenFullPreviewCommand = ReactiveCommand.Create(OpenFullPreview);
-
-        // Set up the preview image in LeadingContent with click vs. drag detection
         var previewImage = new Image
         {
             Stretch = Stretch.Uniform,
