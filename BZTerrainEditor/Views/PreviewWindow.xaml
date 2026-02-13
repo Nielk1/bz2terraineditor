@@ -5,7 +5,7 @@
            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
            xmlns:local="clr-namespace:BZTerrainEditor.Views"
            mc:Ignorable="d"
-           Title="Terrain Preview" Height="600" Width="800"
+           Title="Single Channel Preview" Height="600" Width="800"
            WindowStartupLocation="CenterOwner"
            ResizeMode="CanResize">
     <Grid>

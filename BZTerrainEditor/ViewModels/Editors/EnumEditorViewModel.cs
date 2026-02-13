@@ -1,4 +1,5 @@
 ﻿using BZTerrainEditor.Types;
+using BZTerrainEditor.ViewModels.Nodes;
 using BZTerrainEditor.Views;
 using NodeNetwork.Toolkit.ValueNode;
 using NodeNetwork.ViewModels;
@@ -26,8 +27,16 @@ public static class EnumEditorNodeResistration
         // Check if T is an array of INumber<T> elements
         if (t != null && t.IsEnum)
         {
-            Type nodeType = typeof(EnumEditorViewModel<>).MakeGenericType(t);
-            manager.Register(nodeType, $"Value Node: {t.GetNiceTypeName()}", null, () => (NodeViewModel)Activator.CreateInstance(nodeType));
+            Type editorType = typeof(EnumEditorViewModel<>).MakeGenericType(t);
+            Type valueNodeType = typeof(ValueNode<,>).MakeGenericType(t, editorType);
+
+            manager.Register(valueNodeType, $"Value Node: {t.GetNiceTypeName()}", null, () =>
+            {
+                var editor = Activator.CreateInstance(editorType);
+                var node = (NodeViewModel)Activator.CreateInstance(valueNodeType, editor);
+                node.Name = $"Value Node: {t.GetNiceTypeName()}";
+                return node;
+            });
         }
     }
 }
