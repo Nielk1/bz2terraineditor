@@ -1,5 +1,7 @@
 using BZTerrainEditor.Types;
+using BZTerrainEditor.ViewModels.Editors;
 using BZTerrainEditor.Views;
+using ControlzEx.Standard;
 using DynamicData;
 using NodeNetwork;
 using NodeNetwork.Toolkit.ValueNode;
@@ -11,6 +13,7 @@ using System;
 using System.Numerics;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -20,8 +23,20 @@ using System.Windows.Media.Imaging;
 
 namespace BZTerrainEditor.ViewModels.Nodes;
 
-public static class PreviewNodeResistration
+public enum ERangeMode
 {
+    Extents,
+    Type,
+}
+
+public class PreviewNode : NodeViewModel, IPreviewNode
+{
+    [NodeRegistration]
+    public static void RegisterNode(GlobalNodeManager manager)
+    {
+        manager.Register(typeof(PreviewNode), $"Preview", $"Preview image", () => new PreviewNode());
+    }
+
     [NodeRegistration(IsTypeBased = true)]
     public static void RegisterNode(GlobalNodeManager manager, Type t)
     {
@@ -35,16 +50,17 @@ public static class PreviewNodeResistration
         }
         if (inArray && typeof(INumber<>).MakeGenericType(elementType).IsAssignableFrom(elementType))
         {
-            Type nodeType = typeof(PreviewNode<>).MakeGenericType(elementType);
-            manager.Register(nodeType, $"Auto-Scaled Greyscale Preview {t.GetNiceTypeName()}", $"Preview greyscale image from {t.GetNiceTypeName()}.", () => (NodeViewModel)Activator.CreateInstance(nodeType));
+            InputTypes.Add(elementType);
         }
     }
-}
+    private static HashSet<Type> InputTypes = new HashSet<Type>();
 
-public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
-{
+
     public UIElement? LeadingContent { get; set; }
-    public ValueNodeInputViewModel<T[,]> HeightMap { get; } = new() { Name = $"{typeof(T).GetNiceTypeName()}[,]" };
+
+    public Dictionary<Type, NodeInputViewModel> TypedInputs { get; } = new();
+    //public ValueNodeInputViewModel<T[,]> HeightMap { get; } = new() { Name = $"{typeof(T).GetNiceTypeName()}[,]" };
+    public ValueNodeInputViewModel<ERangeMode> RangeMode { get; private set; }
 
     private BitmapSource _previewImage;
     public BitmapSource PreviewImage
@@ -57,19 +73,115 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
 
     static PreviewNode()
     {
-        Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<PreviewNode<T>>));
+        Locator.CurrentMutable.Register(() => new NodeView(), typeof(IViewFor<PreviewNode>));
     }
 
     public PreviewNode()
     {
-        Name = "Auto-Scaled Greyscale Preview";
+        Name = "Preview";
 
-        Inputs.Add(HeightMap);
+        var inputTypesList = InputTypes.OrderBy(dr => dr.GetNiceTypeName()).ToList(); // Ensure consistent order
+        foreach (var elementType in inputTypesList)
+        {
+            var arrayType = elementType.MakeArrayType(2); // Create T[,]
+            var genericType = typeof(ValueNodeInputViewModel<>).MakeGenericType(arrayType);
+            // Get the constructor with optional parameters
+            var constructor = genericType.GetConstructors().FirstOrDefault(c => c.GetParameters().Length == 2);
+            if (constructor == null) throw new InvalidOperationException("Expected constructor not found.");
 
-        var heightMapObs = HeightMap.WhenAnyValue(vm => vm.Value);
+            // Fetch the default values for the parameters
+            var parameters = constructor.GetParameters();
+            var defaultArgs = parameters.Select(p => p.DefaultValue).ToArray();
 
-        var minMaxObs = heightMapObs.Where(v => v != null).Select(FindMinMax);
-        var imageObs = heightMapObs.CombineLatest(minMaxObs, (array, minMax) => array != null ? CreatePreviewImage(array, minMax.min, minMax.max) : null);
+            // Create the instance with the default arguments
+            var input = (NodeInputViewModel)Activator.CreateInstance(genericType, defaultArgs)!;
+
+            genericType.GetProperty("Name")?.SetValue(input, $"{elementType.GetNiceTypeName()}[,]");
+            genericType.GetProperty("Editor")?.SetValue(input, null);
+
+            TypedInputs[elementType] = input; // Key by element type
+            Inputs.Add(input);
+        }
+
+        RangeMode = new ValueNodeInputViewModel<ERangeMode>();
+        RangeMode.Name = "Range Mode";
+        RangeMode.Editor = new EnumEditorViewModel(typeof(ERangeMode));
+        Inputs.Add(RangeMode);
+
+        // Create observables for each input's Value property
+        var inputValueObservables = TypedInputs.Values
+            .Select(input =>
+            {
+                var inputType = input.GetType();
+                var valueProp = inputType.GetProperty("Value");
+                var genericArg = inputType.GenericTypeArguments[0];
+
+                // Get the WhenAnyValue extension method from ReactiveUI
+                var reactiveExtensionsType = typeof(ReactiveUI.WhenAnyMixin);
+                var whenAnyValueMethod = reactiveExtensionsType.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .FirstOrDefault(m => m.Name == "WhenAnyValue" && m.IsGenericMethod && m.GetParameters().Length == 2);
+
+                if (whenAnyValueMethod != null && valueProp != null)
+                {
+                    // Create lambda: vm => vm.Value
+                    var param = System.Linq.Expressions.Expression.Parameter(inputType, "vm");
+                    var body = System.Linq.Expressions.Expression.Property(param, valueProp);
+                    var lambdaType = typeof(System.Linq.Expressions.Expression<>).MakeGenericType(
+                        typeof(Func<,>).MakeGenericType(inputType, valueProp.PropertyType));
+                    var lambda = System.Linq.Expressions.Expression.Lambda(lambdaType.GetGenericArguments()[0], body, param);
+
+                    // Make generic method for TOwner, TValue
+                    var genericMethod = whenAnyValueMethod.MakeGenericMethod(inputType, valueProp.PropertyType);
+
+                    // Invoke WhenAnyValue<TOwner, TValue>(input, lambda)
+                    return (IObservable<object?>)genericMethod.Invoke(null, new object[] { input, lambda });
+                }
+                else
+                {
+                    // fallback: just return Observable.Return(null)
+                    return Observable.Return<object?>(null);
+                }
+            })
+            .ToList();
+
+        // Combine latest values and select the first non-null one
+        var combinedInputsObs = Observable.CombineLatest(inputValueObservables)
+            .Select(values =>
+            {
+                for (int i = 0; i < values.Count; i++)
+                {
+                    if (values[i] != null)
+                    {
+                        return (TypedInputs.Values.ElementAt(i), values[i]);
+                    }
+                }
+                return (null, null);
+            });
+
+        // Process the first non-null input
+        var imageObs = combinedInputsObs.Select(tuple =>
+        {
+            var (input, value) = tuple;
+            if (input == null || value == null)
+                return (BitmapSource?)null;
+
+            var arrayType = input.GetType().GenericTypeArguments[0]; // T[,]
+            var elementType = arrayType.GetElementType()!; // T (element type)
+            // value is expected to be T[,]
+            var array = value;
+            // Use reflection to call FindMinMax and CreatePreviewImage
+            var findMinMaxMethod = typeof(PreviewNode).GetMethod("FindMinMax", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                ?.MakeGenericMethod(elementType);
+            var createPreviewImageMethod = typeof(PreviewNode).GetMethod("CreatePreviewImage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                ?.MakeGenericMethod(elementType);
+
+            var minMax = findMinMaxMethod?.Invoke(null, new object[] { array });
+            if (minMax == null) return null;
+            var min = minMax.GetType().GetField("Item1")?.GetValue(minMax);
+            var max = minMax.GetType().GetField("Item2")?.GetValue(minMax);
+
+            return (BitmapSource?)createPreviewImageMethod?.Invoke(null, new object[] { array, min, max });
+        });
 
         imageObs.ObserveOn(RxApp.MainThreadScheduler).Subscribe(img => PreviewImage = img);
 
@@ -103,7 +215,7 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
         }
     }
 
-    private static (T min, T max) FindMinMax(T[,] array)
+    private static (T min, T max) FindMinMax<T>(T[,] array) where T: INumber<T>
     {
         if (array == null || array.Length == 0) return (default, default);
         T min = array[0, 0];
@@ -116,7 +228,7 @@ public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
         return (min, max);
     }
 
-    private static BitmapSource CreatePreviewImage(T[,] array, T min, T max)
+    private static BitmapSource CreatePreviewImage<T>(T[,] array, T min, T max) where T : INumber<T>
     {
         if (array == null || array.Length == 0) return null;
         int height = array.GetLength(0);
