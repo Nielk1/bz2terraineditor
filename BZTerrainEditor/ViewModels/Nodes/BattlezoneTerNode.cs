@@ -1,5 +1,6 @@
 ﻿using Bz2TerFile;
 using BZTerrainEditor.Records;
+using BZTerrainEditor.Types;
 using BZTerrainEditor.ViewModels.Editors;
 using ControlzEx.Standard;
 using DynamicData;
@@ -30,17 +31,17 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
 
     public ValueNodeInputViewModel<string?> FilePath { get; } = new() { Name = "File Path" };
 
-    public ValueNodeOutputViewModel<Int16[,]?> Height { get; } = new() { Name = "Height (Int16)" };
-    public ValueNodeOutputViewModel<float[,]?> HeightFloat { get; } = new() { Name = "Height (Single)" };
+    public ValueNodeOutputViewModel<Int16[,]?> Height { get; } = new() { Name = $"Height ({typeof(Int16[,]).GetNiceTypeName()})" };
+    public ValueNodeOutputViewModel<float[,]?> HeightFloat { get; } = new() { Name = $"Height ({typeof(float[,]).GetNiceTypeName()})" };
     //public ValueNodeOutputViewModel<FlagsMap<TerFlags>> NodeFlags { get; } = new() { Name = "Node Flags" };
-    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer0 { get; } = new() { Name = "Layer 0 Texture Index" };
-    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer1 { get; } = new() { Name = "Layer 1 Texture Index" };
-    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer2 { get; } = new() { Name = "Layer 2 Texture Index" };
-    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer3 { get; } = new() { Name = "Layer 3 Texture Index" };
-    public ValueNodeOutputViewModel<ColorMapRgb24> Color { get; } = new() { Name = "Color" };
-    public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer1 { get; } = new() { Name = "Layer 1 Alpha" };
-    public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer2 { get; } = new() { Name = "Layer 2 Alpha" };
-    public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer3 { get; } = new() { Name = "Layer 3 Alpha" };
+    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer0 { get; } = new() { Name = $"Layer 0 Texture Index ({typeof(UInt4[,]).GetNiceTypeName()})" };
+    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer1 { get; } = new() { Name = $"Layer 1 Texture Index ({typeof(UInt4[,]).GetNiceTypeName()})" };
+    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer2 { get; } = new() { Name = $"Layer 2 Texture Index ({typeof(UInt4[,]).GetNiceTypeName()})" };
+    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer3 { get; } = new() { Name = $"Layer 3 Texture Index ({typeof(UInt4[,]).GetNiceTypeName()})" };
+    public ValueNodeOutputViewModel<ColorMapRgb24> Color { get; } = new() { Name = $"Color ({typeof(ColorMapRgb24).GetNiceTypeName()})" };
+    public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer1 { get; } = new() { Name = $"Layer 1 Alpha ({typeof(AlphaMap8).GetNiceTypeName()})" };
+    public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer2 { get; } = new() { Name = $"Layer 2 Alpha ({typeof(AlphaMap8).GetNiceTypeName()})" };
+    public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer3 { get; } = new() { Name = $"Layer 3 Alpha ({typeof(AlphaMap8).GetNiceTypeName()})" };
 
     private readonly CompositeDisposable _disposables = new();
     private FileSystemWatcher? _watcher;
@@ -136,10 +137,10 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
 
         // Keep outputs visible but update names to indicate active/inactive status
         terObservable.Select(tuple => tuple.ter is BZ2TerFile)
-            .Subscribe(isActive => Height.Name = isActive ? "Height (Int16)" : "[Inactive] Height (Int16)")
+            .Subscribe(isActive => Height.Name = isActive ? $"Height ({typeof(Int16[,]).GetNiceTypeName()})" : $"[Inactive] Height ({typeof(Int16[,]).GetNiceTypeName()})")
             .DisposeWith(_disposables);
         terObservable.Select(tuple => tuple.ter is BZCCTerFile)
-            .Subscribe(isActive => HeightFloat.Name = isActive ? "Height (Single)" : "[Inactive] Height (Single)")
+            .Subscribe(isActive => HeightFloat.Name = isActive ? $"Height ({typeof(float[,]).GetNiceTypeName()})" : $"[Inactive] Height ({typeof(float[,]).GetNiceTypeName()})")
             .DisposeWith(_disposables);
 
         // Reset names if no file is loaded
@@ -149,8 +150,8 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
             {
                 if (isEmpty)
                 {
-                    Height.Name = "Height (Int16)";
-                    HeightFloat.Name = "Height (Single)";
+                    Height.Name = $"Height ({typeof(Int16[,]).GetNiceTypeName()})";
+                    HeightFloat.Name = $"Height ({typeof(float[,]).GetNiceTypeName()})";
                 }
             }).DisposeWith(_disposables);
     }

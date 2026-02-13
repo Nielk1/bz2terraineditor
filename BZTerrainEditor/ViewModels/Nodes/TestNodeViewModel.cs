@@ -5,7 +5,7 @@ using NodeNetwork.Views;
 using ReactiveUI;
 using Splat;
 
-namespace BZTerrainEditor.Views
+namespace BZTerrainEditor.ViewModels.Nodes
 {
     public class TestNodeViewModel : NodeViewModel
     {

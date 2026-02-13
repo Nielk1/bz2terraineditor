@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:BZTerrainEditor.Views"
+        xmlns:local="clr-namespace:BZTerrainEditor.ViewModels.Nodes"
         xmlns:nodenetwork="clr-namespace:NodeNetwork.Views;assembly=NodeNetwork"
         mc:Ignorable="d"
         Title="Window1" Height="450" Width="800">
