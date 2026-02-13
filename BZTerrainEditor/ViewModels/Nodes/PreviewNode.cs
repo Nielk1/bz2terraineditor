@@ -158,10 +158,22 @@ public class PreviewNode : NodeViewModel, IPreviewNode
                 return (null, null);
             });
 
+        // Observe RangeMode.Value
+        var rangeModeObs = RangeMode.WhenAnyValue(vm => vm.Value);
+
+        // Combine with RangeMode
+        var combinedWithRangeObs = Observable.CombineLatest<(NodeInputViewModel, object?), ERangeMode, (NodeInputViewModel, object?, ERangeMode)>(
+            combinedInputsObs, rangeModeObs,
+            (inputValueTuple, rangeMode) =>
+            {
+                var (input, value) = inputValueTuple;
+                return (input, value, rangeMode);
+            });
+
         // Process the first non-null input
-        var imageObs = combinedInputsObs.Select(tuple =>
+        var imageObs = combinedWithRangeObs.Select(tuple =>
         {
-            var (input, value) = tuple;
+            var (input, value, rangeMode) = tuple;
             if (input == null || value == null)
                 return (BitmapSource?)null;
 
@@ -170,12 +182,14 @@ public class PreviewNode : NodeViewModel, IPreviewNode
             // value is expected to be T[,]
             var array = value;
             // Use reflection to call FindMinMax and CreatePreviewImage
-            var findMinMaxMethod = typeof(PreviewNode).GetMethod("FindMinMax", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            var findMinMaxMethod = typeof(PreviewNode).GetMethods(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                .FirstOrDefault(m => m.Name == "FindMinMax" && m.IsGenericMethod && m.GetParameters().Length == 2)
                 ?.MakeGenericMethod(elementType);
-            var createPreviewImageMethod = typeof(PreviewNode).GetMethod("CreatePreviewImage", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            var createPreviewImageMethod = typeof(PreviewNode).GetMethods(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                .FirstOrDefault(m => m.Name == "CreatePreviewImage" && m.IsGenericMethod && m.GetParameters().Length == 3)
                 ?.MakeGenericMethod(elementType);
 
-            var minMax = findMinMaxMethod?.Invoke(null, new object[] { array });
+            var minMax = findMinMaxMethod?.Invoke(null, new object[] { array, rangeMode });
             if (minMax == null) return null;
             var min = minMax.GetType().GetField("Item1")?.GetValue(minMax);
             var max = minMax.GetType().GetField("Item2")?.GetValue(minMax);
@@ -215,17 +229,26 @@ public class PreviewNode : NodeViewModel, IPreviewNode
         }
     }
 
-    private static (T min, T max) FindMinMax<T>(T[,] array) where T: INumber<T>
+    private static (T min, T max) FindMinMax<T>(T[,] array, ERangeMode mode) where T: INumber<T>
     {
-        if (array == null || array.Length == 0) return (default, default);
-        T min = array[0, 0];
-        T max = array[0, 0];
-        foreach (T val in array)
+        if (mode == ERangeMode.Type)
         {
-            if (val < min) min = val;
-            if (val > max) max = val;
+            T min = (T)typeof(T).GetField("MinValue").GetValue(null);
+            T max = (T)typeof(T).GetField("MaxValue").GetValue(null);
+            return (min, max);
         }
-        return (min, max);
+        else // ERangeMode.Extents
+        {
+            if (array == null || array.Length == 0) return (default, default);
+            T min = array[0, 0];
+            T max = array[0, 0];
+            foreach (T val in array)
+            {
+                if (val < min) min = val;
+                if (val > max) max = val;
+            }
+            return (min, max);
+        }
     }
 
     private static BitmapSource CreatePreviewImage<T>(T[,] array, T min, T max) where T : INumber<T>

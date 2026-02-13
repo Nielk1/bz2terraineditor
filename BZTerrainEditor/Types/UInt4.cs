@@ -18,8 +18,8 @@ public readonly struct UInt4 :
         _value = value;
     }
 
-    public static UInt4 MinValue => new UInt4(0);
-    public static UInt4 MaxValue => new UInt4(15);
+    public static readonly UInt4 MinValue = new UInt4(0);
+    public static readonly UInt4 MaxValue = new UInt4(15);
 
     public byte Value => _value;
 
