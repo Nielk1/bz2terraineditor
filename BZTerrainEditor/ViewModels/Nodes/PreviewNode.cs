@@ -105,7 +105,7 @@ public class PreviewNode : NodeViewModel, IPreviewNode
 
         RangeMode = new ValueNodeInputViewModel<ERangeMode>();
         RangeMode.Name = "Range Mode";
-        RangeMode.Editor = new EnumEditorViewModel(typeof(ERangeMode));
+        RangeMode.Editor = new EnumEditorViewModel<ERangeMode>();
         Inputs.Add(RangeMode);
 
         // Create observables for each input's Value property

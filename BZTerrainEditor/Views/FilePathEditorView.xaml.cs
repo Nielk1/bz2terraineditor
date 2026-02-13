@@ -17,9 +17,6 @@ using System.Windows.Shapes;
 
 namespace BZTerrainEditor.Views;
 
-/// <summary>
-/// Interaction logic for FilePathEditorView.xaml
-/// </summary>
 public partial class FilePathEditorView : UserControl, IViewFor<FilePathEditorViewModel>
 {
     #region ViewModel

@@ -29,13 +29,13 @@ public static class NodeRegistrationSystem
             method.Invoke(null, new object[] { manager });
         }
 
-        // Collect IComparable types from outputs of registered nodes
+        // Collect IComparable types from inputs and outputs of registered nodes, this is not fully reliable for highly dynamic nodes but they probably got their types from others anyway
         var comparableTypes = new HashSet<Type>();
         foreach (var kvp in manager.GlobalNodeTypes)
         {
             var nodeType = kvp.Key;
             var outputTypes = nodeType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(ValueNodeOutputViewModel<>))
+                .Where(p => p.PropertyType.IsGenericType && (p.PropertyType.GetGenericTypeDefinition() == typeof(ValueNodeOutputViewModel<>) || p.PropertyType.GetGenericTypeDefinition() == typeof(ValueNodeInputViewModel<>)))
                 .Select(p => p.PropertyType.GetGenericArguments()[0])
                 //.Where(t => typeof(IComparable).IsAssignableFrom(t))
                 ;

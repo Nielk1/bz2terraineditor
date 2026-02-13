@@ -1,29 +1,45 @@
-﻿using NodeNetwork.Toolkit.ValueNode;
+﻿using BZTerrainEditor.Types;
+using BZTerrainEditor.Views;
+using NodeNetwork.Toolkit.ValueNode;
+using NodeNetwork.ViewModels;
 using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NodeNetwork.Toolkit.ValueNode;
-using ReactiveUI;
-using BZTerrainEditor.Views;
 
 namespace BZTerrainEditor.ViewModels.Editors;
-public class EnumEditorViewModel : ValueEditorViewModel<object>
+
+public interface IEnumEditorViewModel
+{
+    string[] OptionLabels { get; }
+    int SelectedOptionIndex { get; set; }
+}
+
+public static class EnumEditorNodeResistration
+{
+    [NodeRegistration(IsTypeBased = true)]
+    public static void RegisterNode(GlobalNodeManager manager, Type t)
+    {
+        // Check if T is an array of INumber<T> elements
+        if (t != null && t.IsEnum)
+        {
+            Type nodeType = typeof(EnumEditorViewModel<>).MakeGenericType(t);
+            manager.Register(nodeType, $"Value Node: {t.GetNiceTypeName()}", null, () => (NodeViewModel)Activator.CreateInstance(nodeType));
+        }
+    }
+}
+
+public class EnumEditorViewModel<T> : ValueEditorViewModel<T>, IEnumEditorViewModel where T : Enum
 {
     static EnumEditorViewModel()
     {
-        Splat.Locator.CurrentMutable.Register(() => new EnumEditorView(), typeof(IViewFor<EnumEditorViewModel>));
+        Splat.Locator.CurrentMutable.Register(() => new EnumEditorView(), typeof(IViewFor<EnumEditorViewModel<T>>));
     }
 
-    public object[] Options { get; }
+    public T[] Options { get; }
     public string[] OptionLabels { get; }
 
     #region SelectedOptionIndex
@@ -35,17 +51,14 @@ public class EnumEditorViewModel : ValueEditorViewModel<object>
     }
     #endregion
 
-    public EnumEditorViewModel(Type enumType)
+    public EnumEditorViewModel()
     {
-        if (!enumType.IsEnum)
-        {
-            throw new ArgumentException(enumType.Name + " is not an enum type");
-        }
-        Options = Enum.GetValues(enumType).Cast<object>().ToArray();
+        var enumType = typeof(T);
+        Options = (T[])Enum.GetValues(enumType);
         OptionLabels = Options.Select(c => Enum.GetName(enumType, c)).ToArray();
 
         this.WhenAnyValue(vm => vm.SelectedOptionIndex)
-            .Select(i => i == -1 ? null : Options[i])
+            .Select(i => i == -1 ? default : Options[i])
             .BindTo(this, vm => vm.Value);
     }
 }

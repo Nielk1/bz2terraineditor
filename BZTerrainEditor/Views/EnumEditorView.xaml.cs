@@ -1,14 +1,12 @@
-﻿using BZTerrainEditor.ViewModels.Editors;
+﻿using BZTerrainEditor.Types;
+using BZTerrainEditor.ViewModels;
+using BZTerrainEditor.ViewModels.Editors;
+using NodeNetwork.ViewModels;
 using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Numerics;
 using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,29 +18,33 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
-using ReactiveUI;
 
 namespace BZTerrainEditor.Views;
 
-public partial class EnumEditorView : IViewFor<EnumEditorViewModel>
+public partial class EnumEditorView : UserControl, IViewFor<IEnumEditorViewModel>
 {
     #region ViewModel
     public static readonly DependencyProperty ViewModelProperty = DependencyProperty.Register(nameof(ViewModel),
-        typeof(EnumEditorViewModel), typeof(EnumEditorView), new PropertyMetadata(null));
+        typeof(IEnumEditorViewModel), typeof(EnumEditorView), new PropertyMetadata(null, OnViewModelChanged));
 
-    public EnumEditorViewModel ViewModel
+    public IEnumEditorViewModel ViewModel
     {
-        get => (EnumEditorViewModel)GetValue(ViewModelProperty);
+        get => (IEnumEditorViewModel)GetValue(ViewModelProperty);
         set => SetValue(ViewModelProperty, value);
     }
 
     object IViewFor.ViewModel
     {
         get => ViewModel;
-        set => ViewModel = (EnumEditorViewModel)value;
+        set => ViewModel = (IEnumEditorViewModel)value;
     }
     #endregion
+
+    private static void OnViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var view = (EnumEditorView)d;
+        view.DataContext = e.NewValue;
+    }
 
     public EnumEditorView()
     {
