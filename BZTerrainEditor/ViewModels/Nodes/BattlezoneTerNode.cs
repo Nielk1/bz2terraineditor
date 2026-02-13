@@ -33,10 +33,10 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
     public ValueNodeOutputViewModel<Int16[,]?> Height { get; } = new() { Name = "Height (Int16)" };
     public ValueNodeOutputViewModel<float[,]?> HeightFloat { get; } = new() { Name = "Height (Single)" };
     //public ValueNodeOutputViewModel<FlagsMap<TerFlags>> NodeFlags { get; } = new() { Name = "Node Flags" };
-    public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer0 { get; } = new() { Name = "Layer 0 Texture Index" };
-    public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer1 { get; } = new() { Name = "Layer 1 Texture Index" };
-    public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer2 { get; } = new() { Name = "Layer 2 Texture Index" };
-    public ValueNodeOutputViewModel<IndexMap4Bit> TextureLayer3 { get; } = new() { Name = "Layer 3 Texture Index" };
+    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer0 { get; } = new() { Name = "Layer 0 Texture Index" };
+    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer1 { get; } = new() { Name = "Layer 1 Texture Index" };
+    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer2 { get; } = new() { Name = "Layer 2 Texture Index" };
+    public ValueNodeOutputViewModel<UInt4[,]?> TextureLayer3 { get; } = new() { Name = "Layer 3 Texture Index" };
     public ValueNodeOutputViewModel<ColorMapRgb24> Color { get; } = new() { Name = "Color" };
     public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer1 { get; } = new() { Name = "Layer 1 Alpha" };
     public ValueNodeOutputViewModel<AlphaMap8> AlphaLayer2 { get; } = new() { Name = "Layer 2 Alpha" };
@@ -129,6 +129,11 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
         HeightFloat.Value = terObservable
             .Select(tuple => tuple.ter is BZCCTerFile bzccter ? bzccter.HeightMap : null);
 
+        TextureLayer0.Value = terObservable.Select(tuple => tuple.ter?.TextureLayer0 is byte[,] arr ? ConvertToUInt4Array(arr) : null);
+        TextureLayer1.Value = terObservable.Select(tuple => tuple.ter?.TextureLayer1 is byte[,] arr ? ConvertToUInt4Array(arr) : null);
+        TextureLayer2.Value = terObservable.Select(tuple => tuple.ter?.TextureLayer2 is byte[,] arr ? ConvertToUInt4Array(arr) : null);
+        TextureLayer3.Value = terObservable.Select(tuple => tuple.ter?.TextureLayer3 is byte[,] arr ? ConvertToUInt4Array(arr) : null);
+
         // Keep outputs visible but update names to indicate active/inactive status
         terObservable.Select(tuple => tuple.ter is BZ2TerFile)
             .Subscribe(isActive => Height.Name = isActive ? "Height (Int16)" : "[Inactive] Height (Int16)")
@@ -148,6 +153,17 @@ public class BattlezoneTerNode : NodeViewModel, IDisposable
                     HeightFloat.Name = "Height (Single)";
                 }
             }).DisposeWith(_disposables);
+    }
+    public static UInt4[,] ConvertToUInt4Array(byte[,] source)
+    {
+        if (source == null) return null;
+        int height = source.GetLength(0);
+        int width = source.GetLength(1);
+        var result = new UInt4[height, width];
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                result[y, x] = new UInt4(source[y, x]);
+        return result;
     }
 
     void Dispose(bool disposing)

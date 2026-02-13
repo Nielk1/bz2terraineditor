@@ -1,3 +1,12 @@
+using BZTerrainEditor.Types;
+using BZTerrainEditor.Views;
+using DynamicData;
+using NodeNetwork;
+using NodeNetwork.Toolkit.ValueNode;
+using NodeNetwork.ViewModels;
+using NodeNetwork.Views;
+using ReactiveUI;
+using Splat;
 using System;
 using System.Numerics;
 using System.Reactive;
@@ -8,14 +17,6 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using BZTerrainEditor.Views;
-using DynamicData;
-using NodeNetwork;
-using NodeNetwork.Toolkit.ValueNode;
-using NodeNetwork.ViewModels;
-using NodeNetwork.Views;
-using ReactiveUI;
-using Splat;
 
 namespace BZTerrainEditor.ViewModels.Nodes;
 
@@ -35,7 +36,7 @@ public static class PreviewNodeResistration
         if (inArray && typeof(INumber<>).MakeGenericType(elementType).IsAssignableFrom(elementType))
         {
             Type nodeType = typeof(PreviewNode<>).MakeGenericType(elementType);
-            manager.Register(nodeType, $"Auto-Scaled Greyscale Preview {t.Name}", $"Preview greyscale image from {t.Name}.", () => (NodeViewModel)Activator.CreateInstance(nodeType));
+            manager.Register(nodeType, $"Auto-Scaled Greyscale Preview {t.GetNiceTypeName()}", $"Preview greyscale image from {t.GetNiceTypeName()}.", () => (NodeViewModel)Activator.CreateInstance(nodeType));
         }
     }
 }
@@ -43,7 +44,7 @@ public static class PreviewNodeResistration
 public class PreviewNode<T> : NodeViewModel, IPreviewNode where T : INumber<T>
 {
     public UIElement? LeadingContent { get; set; }
-    public ValueNodeInputViewModel<T[,]> HeightMap { get; } = new() { Name = $"{typeof(T).Name}[,]" };
+    public ValueNodeInputViewModel<T[,]> HeightMap { get; } = new() { Name = $"{typeof(T).GetNiceTypeName()}[,]" };
 
     private BitmapSource _previewImage;
     public BitmapSource PreviewImage

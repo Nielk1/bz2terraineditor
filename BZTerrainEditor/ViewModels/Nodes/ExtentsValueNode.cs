@@ -1,3 +1,4 @@
+using BZTerrainEditor.Types;
 using DynamicData;
 using NodeNetwork;
 using NodeNetwork.Toolkit.ValueNode;
@@ -30,7 +31,7 @@ public static class ExtendsValueNodeResistration
         if (inArray && typeof(IComparable).IsAssignableFrom(elementType))
         {
             Type nodeType = typeof(ExtentsValueNode<,>).MakeGenericType(t, elementType);
-            manager.Register(nodeType, $"Extents {t.Name}", $"Get Min and Max from {t.Name}.", () => (NodeViewModel)Activator.CreateInstance(nodeType));
+            manager.Register(nodeType, $"Extents {t.GetNiceTypeName()}", $"Get Min and Max from {t.GetNiceTypeName()}.", () => (NodeViewModel)Activator.CreateInstance(nodeType));
         }
     }
 }
